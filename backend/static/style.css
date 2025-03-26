@@ -1,0 +1,101 @@
+/* General Body Styling */
+body {
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg, #74b9ff, #a29bfe);
+    color: #333;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    text-align: center;
+}
+
+/* Container for Game */
+.game-container {
+    width: 90%;
+    max-width: 600px;
+    background: #fff;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+/* Title Styling */
+h1 {
+    font-size: 2.5rem;
+    color: #2d3436;
+    margin-bottom: 15px;
+    font-weight: 600;
+}
+
+/* Question Area */
+.question-container {
+    font-size: 1.3rem;
+    background: rgba(255, 255, 255, 0.8);
+    padding: 15px;
+    border-radius: 10px;
+    margin: 20px 0;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Input Styling */
+input[type="text"], input[type="number"] {
+    padding: 12px;
+    width: 85%;
+    margin: 10px 0;
+    border: 2px solid #74b9ff;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.3s ease-in-out;
+    outline: none;
+}
+
+input[type="text"]:focus, input[type="number"]:focus {
+    border-color: #0984e3;
+    box-shadow: 0px 0px 10px rgba(9, 132, 227, 0.4);
+}
+
+/* Button Styling */
+button {
+    padding: 12px 25px;
+    background: linear-gradient(135deg, #6c5ce7, #0984e3);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1.1rem;
+    transition: all 0.3s ease-in-out;
+    margin: 10px;
+    font-weight: 600;
+}
+
+button:hover {
+    background: linear-gradient(135deg, #5f27cd, #0652dd);
+    transform: scale(1.05);
+}
+
+/* Score Area */
+.score-container {
+    margin-top: 30px;
+    font-size: 1.3rem;
+    font-weight: bold;
+    background: #dfe6e9;
+    padding: 10px;
+    border-radius: 10px;
+    display: inline-block;
+}
+
+/* Fade In Animation */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

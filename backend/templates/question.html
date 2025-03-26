@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Question Page</title>
+    <style>
+        /* General Styling */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #74b9ff, #a29bfe);
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            text-align: center;
+        }
+
+        .question-container {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 600px;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        h1 {
+            font-size: 2rem;
+            color: #2d3436;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        /* Audio Player */
+        #audio-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        #custom-progress {
+            width: 100%;
+            height: 10px;
+            border-radius: 5px;
+            background: #dfe6e9;
+            appearance: none;
+            outline: none;
+            transition: 0.3s ease-in-out;
+        }
+
+        #custom-progress::-webkit-slider-thumb {
+            appearance: none;
+            width: 15px;
+            height: 15px;
+            background: #6c5ce7;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        #time-start, #time-end {
+            font-family: monospace;
+            font-size: 1rem;
+            font-weight: bold;
+        }
+
+        /* Input Field */
+        input[type="text"] {
+            padding: 12px;
+            width: 80%;
+            margin: 10px 0;
+            border: 2px solid #74b9ff;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease-in-out;
+            outline: none;
+        }
+
+        input[type="text"]:focus {
+            border-color: #0984e3;
+            box-shadow: 0px 0px 10px rgba(9, 132, 227, 0.4);
+        }
+
+        /* Buttons */
+        .button-container {
+            margin-top: 15px;
+        }
+
+        button {
+            padding: 12px 25px;
+            background: linear-gradient(135deg, #6c5ce7, #0984e3);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: all 0.3s ease-in-out;
+            margin: 10px;
+            font-weight: 600;
+        }
+
+        button:hover {
+            background: linear-gradient(135deg, #5f27cd, #0652dd);
+            transform: scale(1.05);
+        }
+
+        /* Fade In Animation */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+  
+<body>
+    <h1>Question #<span id="question-number"></span></h1>
+    <div id="audio-container">
+        <audio id="audio-player" style="display: none;"></audio>
+        <span id="time-start">00:00</span>
+        <input type="range" id="custom-progress" min="0" max="100" value="0" disabled>
+        <span id="time-end"></span>
+    </div>
+    <form id="answer-form">
+        <label for="anime-name">Anime Name: </label>
+        <input type="text" id="anime-name" name="anime-name" required>
+        <button type="submit">Submit</button>
+    </form>
+    
+    <!-- Feedback message after answer submission -->
+    <div id="feedback"></div>
+
+    <a href="#" id="next-question-link" style="display:none;">
+        <button>Next Question</button>
+    </a>
+    
+    <br>
+    <button id="replay-btn">Replay</button>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        let questions = JSON.parse(decodeURIComponent(urlParams.get('questions')));
+        let difficulty = parseInt(decodeURIComponent(urlParams.get('difficulty')));
+        let currentQuestion = parseInt(decodeURIComponent(urlParams.get('current_question'))) || 0;
+
+        const audioPlayer = document.getElementById('audio-player');
+        const progressBar = document.getElementById('custom-progress');
+        const timeEnd = document.getElementById('time-end');
+        const feedbackDiv = document.getElementById('feedback');
+        const nextQuestionLink = document.getElementById('next-question-link');
+
+        function formatTime(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        }
+
+        timeEnd.textContent = formatTime(difficulty);
+
+        function loadQuestion() {
+            const question = questions[currentQuestion];
+
+            audioPlayer.src = question.url;
+            audioPlayer.currentTime = question.start_time;
+
+            audioPlayer.play().catch(error => {
+                console.error("Playback failed:", error);
+            });
+
+            document.getElementById('question-number').innerText = currentQuestion + 1;
+
+            audioPlayer.ontimeupdate = function () {
+                const currentTime = audioPlayer.currentTime;
+                const start = question.start_time;
+                const end = question.start_time + difficulty;
+
+                if (currentTime >= start && currentTime < end) {
+                    progressBar.value = ((currentTime - start) / difficulty) * 100;
+                } else if (currentTime >= end) {
+                    progressBar.value = 100;
+                }
+            };
+
+            setTimeout(() => {
+                audioPlayer.pause();
+            }, difficulty * 1000);
+        }
+
+        document.getElementById('answer-form').addEventListener('submit', function (event) {
+            event.preventDefault();
+            const userAnswer = document.getElementById('anime-name').value.trim();
+            const correctAnswer = questions[currentQuestion].correct_answer; // Assuming the correct answer is in the question object
+
+            // Check if the answer is correct
+            if (userAnswer === correctAnswer) {
+                feedbackDiv.textContent = 'Correct!';
+                feedbackDiv.style.color = 'green';
+            } else {
+                feedbackDiv.textContent = `Incorrect! The correct answer is: ${correctAnswer}`;
+                feedbackDiv.style.color = 'red';
+            }
+
+            // Show the next question button
+            nextQuestionLink.style.display = 'inline-block';
+        });
+
+        document.getElementById('replay-btn').addEventListener('click', loadQuestion);
+
+        document.getElementById('next-question-link').addEventListener('click', function () {
+            currentQuestion++;
+
+            if (currentQuestion < questions.length) {
+                // Update URL with the correct current_question parameter and reload the page with updated state
+                window.location.search = `?questions=${encodeURIComponent(JSON.stringify(questions))}&difficulty=${difficulty}&current_question=${currentQuestion}`;
+            } else {
+                alert('Game Over!');
+            }
+
+            // Hide feedback and next question button
+            feedbackDiv.textContent = '';
+            nextQuestionLink.style.display = 'none';
+
+            // Reload the current question
+            loadQuestion();
+        });
+
+        window.onload = loadQuestion;
+    </script>
+</body>
+
+</html>
