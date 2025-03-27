@@ -69,7 +69,7 @@ def get_random_song_clip():
         
         # Generate random start time (1-30 sec for example)
         duration = yt.length  # Total duration in sec
-        start_time = random.randint(0, max(1, duration - 5))  # Ensure clip is playable
+        start_time = random.randint(0, min(90 - game_data['difficulty'], duration - game_data['difficulty']))  # Ensure clip is playable
         
         # Mark the URL as used
         used_urls.add(url)
@@ -94,13 +94,14 @@ def start_game():
 
         difficulty = int(data.get("difficulty", 3))  # Difficulty should correspond to the duration in seconds
         question_count = int(data.get("question_count", 5))  # Get the number of questions
+        game_data['difficulty'] = difficulty
 
         # Generate questions based on the difficulty and number of questions
         questions = [get_random_song_clip() for _ in range(question_count)]
 
         # Store the questions and difficulty in the game data
         game_data['questions'] = questions
-        game_data['difficulty'] = difficulty
+        
         game_data['current_question'] = 0  # Start at the first question
         game_data['score'] = 0  # Start with a score of 0
 

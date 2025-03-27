@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -17,7 +18,8 @@
             align-items: center;
             height: 100vh;
             text-align: center;
-            flex-direction: column; /* Stack elements vertically */
+            flex-direction: column;
+            /* Stack elements vertically */
         }
 
         /* Title Styling */
@@ -33,18 +35,21 @@
         #audio-container {
             display: flex;
             align-items: center;
-            gap: 10px; /* Consistent spacing */
+            gap: 10px;
+            /* Consistent spacing */
             margin: 20px 0;
         }
 
         #custom-progress {
-            width: 250px; /* Match input/select width from start page */
+            width: 250px;
+            /* Match input/select width from start page */
             height: 20px;
             margin-top: 10px;
             vertical-align: middle;
             appearance: none;
             background: #dfe6e9;
-            border-radius: 8px; /* Match other elements */
+            border-radius: 8px;
+            /* Match other elements */
             outline: none;
         }
 
@@ -57,17 +62,20 @@
             cursor: pointer;
         }
 
-        #time-start, #time-end {
+        #time-start,
+        #time-end {
             font-family: monospace;
             font-size: 1rem;
-            color: #2d3436; /* Match text color */
+            color: #2d3436;
+            /* Match text color */
         }
 
         /* Form Styling */
         #answer-form {
             display: flex;
             flex-direction: column;
-            align-items: center; /* Center form elements */
+            align-items: center;
+            /* Center form elements */
         }
 
         label {
@@ -79,7 +87,8 @@
         /* Input Field */
         input[type="text"] {
             padding: 12px;
-            width: 250px; /* Match start page input/select width */
+            width: 250px;
+            /* Match start page input/select width */
             max-width: 100%;
             margin: 10px 0;
             border: 2px solid #74b9ff;
@@ -107,7 +116,8 @@
             transition: all 0.3s ease-in-out;
             margin: 10px;
             font-weight: 600;
-            width: 250px; /* Match start page button width */
+            width: 250px;
+            /* Match start page button width */
             max-width: 100%;
             box-sizing: border-box;
         }
@@ -124,7 +134,8 @@
         }
 
         #next-question-link {
-            text-decoration: none; /* Remove underline from link */
+            text-decoration: none;
+            /* Remove underline from link */
         }
 
         /* Fade In Animation */
@@ -133,6 +144,7 @@
                 opacity: 0;
                 transform: translateY(-10px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -140,6 +152,7 @@
         }
     </style>
 </head>
+
 <body>
     <h1>Question #<span id="question-number"></span></h1>
     <div id="audio-container">
@@ -148,34 +161,38 @@
         <input type="range" id="custom-progress" min="0" max="100" value="0" disabled>
         <span id="time-end"></span>
     </div>
-    <button id="replay-btn">Replay</button>
+    <button id="replay-btn">Replay (2)</button>
     <br>
     <form id="answer-form">
         <label for="anime-name">Anime Name: </label>
         <input type="text" id="anime-name" name="anime-name" required>
         <button id="submit-button" type="submit">Submit</button>
     </form>
- 
+
     <div id="feedback"></div>
 
     <a href="#" id="next-question-link" style="display:none;">
-        <button>Next Question</button>
+        <button id="next-question-btn">Next Question</button>
     </a>
 
-    
-    
+
+
 
     <script>
         const urlParams = new URLSearchParams(window.location.search);
         let questions = JSON.parse(decodeURIComponent(urlParams.get('questions')));
         let difficulty = parseInt(decodeURIComponent(urlParams.get('difficulty')));
         let currentQuestion = parseInt(decodeURIComponent(urlParams.get('current_question'))) || 0;
+        let replayCount = 0; // Track replay attempts
+        const maxReplays = 2; // Max replay limit
 
+        const replayButton = document.getElementById('replay-btn');
         const audioPlayer = document.getElementById('audio-player');
         const progressBar = document.getElementById('custom-progress');
         const timeEnd = document.getElementById('time-end');
         const feedbackDiv = document.getElementById('feedback');
         const nextQuestionLink = document.getElementById('next-question-link');
+        const nextButton = document.getElementById('next-question-btn');
         const submitButton = document.getElementById('submit-button');
 
         function formatTime(seconds) {
@@ -234,13 +251,27 @@
                 feedbackDiv.style.color = 'red';
             }
             submitButton.style.display = 'none';
- 
+
             // Show the next question button
+            if (currentQuestion == questions.length - 1) {
+                nextButton.textContent = "See Score";
+            }
             nextQuestionLink.style.display = 'inline-block';
-            
+
         });
 
-        document.getElementById('replay-btn').addEventListener('click', loadQuestion);
+        document.getElementById('replay-btn').addEventListener('click', function () {
+            if (replayCount < maxReplays) {
+                loadQuestion(); // Replay the question
+                replayCount++;  // Increase replay count
+                replayButton.textContent = `Replay (${maxReplays - replayCount})`;
+
+                if (replayCount >= maxReplays) { 
+                    replayButton.style.cursor = 'not-allowed'; // Change cursor style
+                    replayButton.disabled = true; // Disable button
+                }
+            }
+        });
 
         document.getElementById('next-question-link').addEventListener('click', function () {
             currentQuestion++;
@@ -258,7 +289,7 @@
                 window.location.search = `?questions=${encodeURIComponent(JSON.stringify(questions))}&difficulty=${difficulty}&current_question=${currentQuestion}&score=${score}`;
             } else {
                 // Redirect to game over page with final score
-                window.location.href = `/game_over?score=${score}&total_questions=${questions.length}`;
+                nextQuestionLink.href = `/game_over?score=${score}&total_questions=${questions.length}`;
             }
 
             // Hide feedback and next question button
