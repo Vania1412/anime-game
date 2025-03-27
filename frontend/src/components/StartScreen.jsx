@@ -31,6 +31,7 @@ function StartScreen({ setGameState }) {
 
         setGameState(newGameState);
         localStorage.setItem('gameState', JSON.stringify(newGameState)); // Save to localStorage
+        localStorage.removeItem(`replayCount_${0}`);
 
         navigate('/question');
       } else {

@@ -14,6 +14,7 @@ function QuestionScreen({ gameState, setGameState }) {
   const timeStartRef = useRef(null);
   const timeEndRef = useRef(null);
   const navigate = useNavigate();
+  
 
   const { questions, difficulty, currentQuestion, score, totalQuestions } = gameState;
   const question = questions[currentQuestion] || {};
@@ -26,7 +27,7 @@ function QuestionScreen({ gameState, setGameState }) {
     if (storedReplayCount !== null) {
       setReplayCount(parseInt(storedReplayCount, 10));
     } else {
-      setReplayCount(0);
+      setReplayCount(0); 
     }
 
     timeEndRef.current.textContent = formatTime(difficulty);
@@ -113,8 +114,8 @@ function QuestionScreen({ gameState, setGameState }) {
 
       // Clear replay count for next question
       localStorage.removeItem(`replayCount_${currentQuestion + 1}`);
-    } else {
-      navigate(`/game_over`);
+    } else { 
+      navigate(`/game_over`); 
     }
   };
 
