@@ -68,7 +68,8 @@
             cursor: pointer;
         }
 
-        #time-start, #time-end {
+        #time-start,
+        #time-end {
             font-family: monospace;
             font-size: 1rem;
             font-weight: bold;
@@ -120,6 +121,7 @@
                 opacity: 0;
                 transform: translateY(-10px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -128,7 +130,7 @@
     </style>
 </head>
 
-  
+
 <body>
     <h1>Question #<span id="question-number"></span></h1>
     <div id="audio-container">
@@ -142,14 +144,14 @@
         <input type="text" id="anime-name" name="anime-name" required>
         <button type="submit">Submit</button>
     </form>
-    
+
     <!-- Feedback message after answer submission -->
     <div id="feedback"></div>
 
     <a href="#" id="next-question-link" style="display:none;">
         <button>Next Question</button>
     </a>
-    
+
     <br>
     <button id="replay-btn">Replay</button>
 
@@ -177,29 +179,34 @@
             const question = questions[currentQuestion];
 
             audioPlayer.src = question.url;
-            audioPlayer.currentTime = question.start_time;
 
-            audioPlayer.play().catch(error => {
-                console.error("Playback failed:", error);
-            });
+            audioPlayer.onloadedmetadata = function () {
+                audioPlayer.currentTime = question.start_time;
 
-            document.getElementById('question-number').innerText = currentQuestion + 1;
+                // Ensure playback starts only after seeking
+                audioPlayer.play().then(() => {
+                    console.log("Audio started at:", audioPlayer.currentTime);
+                }).catch(error => {
+                    console.error("Playback failed:", error);
+                });
 
-            audioPlayer.ontimeupdate = function () {
-                const currentTime = audioPlayer.currentTime;
-                const start = question.start_time;
-                const end = question.start_time + difficulty;
+                document.getElementById('question-number').innerText = currentQuestion + 1;
 
-                if (currentTime >= start && currentTime < end) {
-                    progressBar.value = ((currentTime - start) / difficulty) * 100;
-                } else if (currentTime >= end) {
-                    progressBar.value = 100;
-                }
+                audioPlayer.ontimeupdate = function () {
+                    const currentTime = audioPlayer.currentTime;
+                    const start = question.start_time;
+                    const end = question.start_time + difficulty;
+
+                    if (currentTime >= start && currentTime < end) {
+                        progressBar.value = ((currentTime - start) / difficulty) * 100;
+                    } else if (currentTime >= end) {
+                        progressBar.value = 100;
+                        audioPlayer.pause();  // Pause at exact time
+                        console.log("Paused at:", audioPlayer.currentTime);
+                    }
+                };
             };
 
-            setTimeout(() => {
-                audioPlayer.pause();
-            }, difficulty * 1000);
         }
 
         document.getElementById('answer-form').addEventListener('submit', function (event) {
@@ -225,11 +232,20 @@
         document.getElementById('next-question-link').addEventListener('click', function () {
             currentQuestion++;
 
+            // Retrieve the current score from the URL
+            const urlParams = new URLSearchParams(window.location.search);
+            let score = parseInt(urlParams.get('score')) || 0;
+
+            if (feedbackDiv.textContent.includes("Correct!")) {
+                score++; // Increase score if the answer was correct
+            }
+
             if (currentQuestion < questions.length) {
-                // Update URL with the correct current_question parameter and reload the page with updated state
-                window.location.search = `?questions=${encodeURIComponent(JSON.stringify(questions))}&difficulty=${difficulty}&current_question=${currentQuestion}`;
+                // Update URL with the correct parameters (including score) and reload the page
+                window.location.search = `?questions=${encodeURIComponent(JSON.stringify(questions))}&difficulty=${difficulty}&current_question=${currentQuestion}&score=${score}`;
             } else {
-                alert('Game Over!');
+                // Redirect to game over page with final score
+                window.location.href = `/game_over?score=${score}&total_questions=${questions.length}`;
             }
 
             // Hide feedback and next question button
@@ -239,6 +255,7 @@
             // Reload the current question
             loadQuestion();
         });
+
 
         window.onload = loadQuestion;
     </script>

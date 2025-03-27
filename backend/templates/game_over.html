@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Over</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            text-align: center;
+        }
+
+        .game-container {
+            width: 80%;
+            max-width: 500px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            font-size: 2rem;
+            color: #333;
+        }
+
+        p {
+            font-size: 1.2rem;
+            margin: 10px 0;
+        }
+
+        .score {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #007bff;
+        }
+
+        button {
+            padding: 12px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-top: 20px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Over</title>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // Get score and total questions from URL parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            const score = urlParams.get("score") || 0;
+            const totalQuestions = urlParams.get("total_questions") || 1; // Avoid division by zero
+            
+            // Calculate percentage score
+            const percentage = ((score / totalQuestions) * 100).toFixed(2);
+
+            // Display the score
+            document.getElementById("score-text").textContent = `${score} / ${totalQuestions} (${percentage}%)`;
+        });
+    </script>
+</head>
+<body>
+    <div class="game-container">
+        <h1>Game Over!</h1>
+        <p>Your final score is:</p>
+        <p class="score" id="score-text">Loading...</p>
+        
+        <form action="/" method="get">
+            <button type="submit">Play Again</button>
+        </form>
+    </div>
+</body>
+</html>
+

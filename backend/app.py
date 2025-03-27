@@ -114,39 +114,70 @@ def start_game():
 def answer_question():
     """Serve the current question and handle the answer"""
     try:
-        if 'current_question' not in game_data or game_data['current_question'] >= len(game_data['questions']):
+        # Get query parameters from the URL
+        current_question = int(request.args.get("current_question", 0))
+        score = int(request.args.get("score", 0))
+        
+        # Check if questions exist
+        if current_question >= len(game_data['questions']):
             return jsonify({"error": "No more questions"}), 400
 
-        current_question = game_data['current_question']
+        # Get the current question and correct answer
         question = game_data['questions'][current_question]
         correct_answer = ANSWER_LIST[current_question]  # Get the correct answer
 
         if request.method == 'POST':
             # Handle the submitted answer
-            answer = request.form.get('answer')
+            answer = request.form.get('answer', '').strip().lower()
+
             # Check if the answer is correct
-            if answer.strip() == correct_answer:
-                game_data['score'] += 1
+            if answer == correct_answer.lower():
+                score += 1  # Increase score
                 message = "Correct!"
             else:
                 message = f"Incorrect! The correct answer is: {correct_answer}"
 
             # Move to the next question
-            game_data['current_question'] += 1
+            current_question += 1
 
-            # If there are more questions, redirect to the next question page
-            if game_data['current_question'] < len(game_data['questions']):
-                return render_template('question.html', question=question, message=message)
+            # Redirect to the next question with updated score in URL
+            if current_question < len(game_data['questions']):
+                return render_template(
+                    'question.html',
+                    question=question,
+                    message=message,
+                    next_url=f"/question?current_question={current_question}&score={score}"
+                )
             else:
-                # Game ends
-                return render_template('game_over.html', score=game_data['score'])
+                # Game over: Show final score
+                return render_template(
+                    'game_over.html',
+                    score=score,
+                    total_questions=len(game_data['questions'])
+                )
 
-        # Render the question page with the current question's data
-        return render_template('question.html', question=question, message=None)
+        # Render the question page with the current question
+        return render_template(
+            'question.html',
+            question=question,
+            message=None,
+            next_url=f"/question?current_question={current_question+1}&score={score}"
+        )
 
     except Exception as e:
         app.logger.error(f"Error in answer_question route: {e}")
         return jsonify({"error": "Internal server error"}), 500
+
+@app.route('/game_over')
+def game_over():
+    """Render the game over page with the final score."""
+    final_score = game_data.get('score', 0)
+
+    # Reset game data for a new game
+    game_data.clear()
+
+    return render_template('game_over.html', score=final_score)
+
 
 if __name__ == '__main__':
     app.run(debug=True)
