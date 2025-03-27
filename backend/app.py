@@ -1,11 +1,12 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
+import os
 import random
 from pytubefix import YouTube
 from pytubefix.cli import on_progress
 
-app = Flask(__name__)
-CORS(app)  # Enable CORS for React frontend (http://localhost:5173)
+app = Flask(__name__, static_folder='dist', static_url_path='/')
+CORS(app)  # Enable CORS for React frontend
 
 # Sample YouTube Playlist and Answers
 YOUTUBE_PLAYLIST = [
@@ -67,7 +68,7 @@ def get_random_song_clip(difficulty):
             "url": stream.url,
             "start_time": start_time,
             "correct_answer": ANSWER_LIST[r],
-            "title": ANSWER_LIST[r]  # Added for consistency with frontend
+            "title": ANSWER_LIST[r]
         }
     except Exception as e:
         app.logger.error(f"Error fetching YouTube clip: {e}")
@@ -84,10 +85,8 @@ def start_game():
         difficulty = int(data.get("difficulty", 3))
         question_count = int(data.get("question_count", 5))
 
-        # Generate unique questions
         questions = [get_random_song_clip(difficulty) for _ in range(min(question_count, len(YOUTUBE_PLAYLIST)))]
 
-        # Return initial game state
         return jsonify({
             "questions": questions,
             "difficulty": difficulty,
@@ -122,7 +121,21 @@ def check_answer():
         })
     except Exception as e:
         app.logger.error(f"Error in check_answer: {e}")
-        return jsonify({"error": "Internal server error"}), 500
+        return jsonify({"error": "Internal server error"}), 500  
 
+# =========================
+# SERVE REACT FRONTEND
+# =========================
+@app.route('/')
+def serve_react():
+    return send_from_directory(app.static_folder, 'index.html')
+
+@app.route('/<path:path>')
+def serve_static_files(path):
+    return send_from_directory(app.static_folder, path)
+
+# =========================
+# RUN FLASK SERVER
+# =========================
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    app.run(debug=True, host='0.0.0.0', port=5000)
