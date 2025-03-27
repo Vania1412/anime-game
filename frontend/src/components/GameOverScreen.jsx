@@ -1,0 +1,41 @@
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+
+const GameOverScreen = ({ gameState, setGameState }) => {
+  const [percentage, setPercentage] = useState('0.00');
+  const navigate = useNavigate();
+  const { score, totalQuestions } = gameState;
+
+  useEffect(() => {
+    // Calculate percentage score
+    const percentageScore = ((score / totalQuestions) * 100).toFixed(2);
+    setPercentage(percentageScore);
+  }, [score, totalQuestions]);
+
+  const handlePlayAgain = () => {
+    setGameState({
+      questions: [], // reset questions (if necessary)
+      difficulty: 1,
+      currentQuestion: 0,
+      score: 0,
+      totalQuestions: 0,
+    });
+    navigate('/'); // Go back to the start screen
+  };
+
+  return (
+    <div className="game-container">
+      <h1>Game Over!</h1>
+      <p>Your final score is:</p>
+      <p className="score">
+        {score} / {totalQuestions} ({percentage}%)
+      </p>
+
+      <button onClick={handlePlayAgain}>
+        Play Again
+      </button>
+    </div>
+  );
+};
+
+export default GameOverScreen;

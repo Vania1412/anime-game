@@ -1,0 +1,107 @@
+/* General Body Styling */
+body {
+  font-family: 'Poppins', sans-serif;
+  background: linear-gradient(135deg, #74b9ff, #a29bfe);
+  color: #333;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh; /* Changed from height to min-height for flexibility */
+  display: flex;
+  justify-content: center; /* Center horizontally */
+  align-items: center; /* Center vertically */
+  text-align: center;
+}
+
+ 
+
+/* Title Styling */
+h1 {
+  font-size: 2.5rem;
+  color: #2d3436;
+  margin: 0 0 15px 0; /* Consistent margins, no top margin needed */
+  font-weight: 600;
+  text-align: center; /* Ensure text is centered */
+}
+ 
+.game-container {
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto; /* Center horizontally */
+  background: #fff;
+  padding: 30px;
+  border-radius: 15px;
+  box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+  animation: fadeIn 0.5s ease-in-out;
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Center children horizontally */
+}
+
+/* Form Styling */
+#startGameForm {
+  width: 100%; /* Full width within container */
+  max-width: 100%;  
+  flex-direction: column;
+  align-items: center; /* Center form elements */
+}
+
+/* Label Styling */
+label {
+  font-size: 1.2rem;
+  margin-bottom: 5px; /* Space between label and input */
+  color: #2d3436;
+}
+
+/* Ensure that input[type="number"] and select are the same size */
+input[type="number"], select {
+  padding: 12px;
+  width: 250px; /* Fixed width for consistency */
+  max-width: 100%; /* Prevent overflow on smaller screens */
+  margin: 10px 0;
+  border: 2px solid #74b9ff;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: all 0.3s ease-in-out;
+  outline: none;
+  box-sizing: border-box; /* Include padding/border in width */
+}
+
+/* Focus Styles for input and select */
+input[type="number"]:focus, select:focus {
+  border-color: #0984e3;
+  box-shadow: 0px 0px 10px rgba(9, 132, 227, 0.4);
+}
+
+/* Button Styling */
+button {
+  padding: 12px 25px;
+  background: linear-gradient(135deg, #6c5ce7, #0984e3);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1.1rem;
+  transition: all 0.3s ease-in-out;
+  margin: 10px;
+  font-weight: 600;
+  width: 250px; /* Match input/select width */
+  max-width: 100%; /* Responsive adjustment */
+  box-sizing: border-box;
+}
+
+button:hover {
+  background: linear-gradient(135deg, #5f27cd, #0652dd);
+  transform: scale(1.05);
+}
+
+/* Fade In Animation */
+@keyframes fadeIn {
+  from {
+      opacity: 0;
+      transform: translateY(-10px);
+  }
+  to {
+      opacity: 1;
+      transform: translateY(0);
+  }
+}
