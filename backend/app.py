@@ -17,6 +17,7 @@ YOUTUBE_PLAYLIST = [
     "https://youtu.be/_5WvUPHF5f8",  
     "https://youtu.be/oG4eu4HMtbo",   
     "https://youtu.be/VekCU4YJiR8",   
+    "https://youtu.be/-jYqJCzZ8zs",   
     "https://youtu.be/FWXkipC-vqs",   
 ]
 
@@ -30,6 +31,7 @@ ANSWER_LIST = [
     "GOSICK",   
     "DEADMAN WONDERLAND",  
     "My Dress-Up Darling",   
+    "Banana Fish",   
     "Banana Fish",   
     "BanG Dream! Ave Mujica",   
 ]

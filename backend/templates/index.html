@@ -1,72 +1,76 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Anime Song Game</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
+
 <body>
+    <!-- Header at the top and centered -->
     <h1>Anime Song Game</h1>
+    <div class="game-container">
+        <form id="startGameForm">
+            <label for="difficulty">Select Difficulty:</label>
+            <select id="difficulty" name="difficulty">
+                <option value="1">1 Second</option>
+                <option value="3">3 Seconds</option>
+                <option value="5">5 Seconds</option>
+            </select>
 
-    <form id="startGameForm">
-        <label for="difficulty">Select Difficulty:</label>
-        <select id="difficulty" name="difficulty">
-            <option value="1">1 Second</option>
-            <option value="3">3 Seconds</option>
-            <option value="5">5 Seconds</option>
-        </select>
+            <label for="question_count">Select Number of Questions:</label>
+            <input type="number" id="question_count" name="question_count" min="1" max="100" value="5">
 
-        <label for="question_count">Select Number of Questions:</label>
-        <input type="number" id="question_count" name="question_count" min="1" max="100" value="5">
+            <button type="submit" id="startGameBtn">Start Game</button>
+        </form>
 
-        <button type="submit" id="startGameBtn">Start Game</button>
-    </form>
+        <div id="errorMessage" style="color: red; display: none;">
+            <p>Error starting the game!</p>
+        </div>
 
-    <div id="errorMessage" style="color: red; display: none;">
-        <p>Error starting the game!</p>
-    </div>
+        <script>
+            document.getElementById('startGameForm').addEventListener('submit', function (event) {
+                event.preventDefault();
 
-    <script>
-        document.getElementById('startGameForm').addEventListener('submit', function(event) {
-            event.preventDefault();
-
-            const difficulty = document.getElementById('difficulty').value;
-            const questionCount = parseInt(document.getElementById('question_count').value, 10);
+                const difficulty = document.getElementById('difficulty').value;
+                const questionCount = parseInt(document.getElementById('question_count').value, 10);
 
 
-            fetch('/start_game', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    difficulty: difficulty,
-                    question_count: questionCount,
-                }),
-            })
-            .then(response => response.json())
-            .then(data => {
-                // If the game started successfully, redirect to the next page
-                if (data.questions) {
-                    const questionsParam = encodeURIComponent(JSON.stringify(data.questions));
-                    const difficultyParam = encodeURIComponent(data.difficulty);
-                    const currentQuestionParam = encodeURIComponent(data.current_question);
+                fetch('/start_game', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        difficulty: difficulty,
+                        question_count: questionCount,
+                    }),
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        // If the game started successfully, redirect to the next page
+                        if (data.questions) {
+                            const questionsParam = encodeURIComponent(JSON.stringify(data.questions));
+                            const difficultyParam = encodeURIComponent(data.difficulty);
+                            const currentQuestionParam = encodeURIComponent(data.current_question);
 
-                    // Redirect with query params
-                    window.location.href = `/question?questions=${questionsParam}&difficulty=${difficultyParam}&current_question=${currentQuestionParam}`;
-                } else {
-                    // Show error if the game cannot start
-                    document.getElementById('errorMessage').style.display = 'block';
-                    alert('Error starting game: ' + data.error);
-                }
-            })
-            .catch(error => {
-                // Handle any network or server-side errors
-                document.getElementById('errorMessage').style.display = 'block';
-                alert('Error starting game: ' + error.message);
+                            // Redirect with query params
+                            window.location.href = `/question?questions=${questionsParam}&difficulty=${difficultyParam}&current_question=${currentQuestionParam}`;
+                        } else {
+                            // Show error if the game cannot start
+                            document.getElementById('errorMessage').style.display = 'block';
+                            alert('Error starting game: ' + data.error);
+                        }
+                    })
+                    .catch(error => {
+                        // Handle any network or server-side errors
+                        document.getElementById('errorMessage').style.display = 'block';
+                        alert('Error starting game: ' + error.message);
+                    });
             });
-        });
-    </script>
+        </script>
 </body>
+
 </html>

@@ -1,12 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Question Page</title>
     <style>
-        /* General Styling */
+        /* General Body Styling */
         body {
             font-family: 'Poppins', sans-serif;
             background: linear-gradient(135deg, #74b9ff, #a29bfe);
@@ -18,45 +17,35 @@
             align-items: center;
             height: 100vh;
             text-align: center;
+            flex-direction: column; /* Stack elements vertically */
         }
 
-        .question-container {
-            background: white;
-            padding: 25px;
-            border-radius: 15px;
-            box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.2);
-            width: 90%;
-            max-width: 600px;
-            animation: fadeIn 0.5s ease-in-out;
-        }
-
+        /* Title Styling */
         h1 {
-            font-size: 2rem;
+            font-size: 2.5rem;
             color: #2d3436;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             font-weight: 600;
+            margin-top: 0;
         }
 
-        /* Audio Player */
+        /* Audio Container */
         #audio-container {
             display: flex;
             align-items: center;
-            gap: 15px;
-            background: rgba(255, 255, 255, 0.8);
-            padding: 15px;
-            border-radius: 10px;
+            gap: 10px; /* Consistent spacing */
             margin: 20px 0;
-            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
         }
 
         #custom-progress {
-            width: 100%;
-            height: 10px;
-            border-radius: 5px;
-            background: #dfe6e9;
+            width: 250px; /* Match input/select width from start page */
+            height: 20px;
+            margin-top: 10px;
+            vertical-align: middle;
             appearance: none;
+            background: #dfe6e9;
+            border-radius: 8px; /* Match other elements */
             outline: none;
-            transition: 0.3s ease-in-out;
         }
 
         #custom-progress::-webkit-slider-thumb {
@@ -68,23 +57,37 @@
             cursor: pointer;
         }
 
-        #time-start,
-        #time-end {
+        #time-start, #time-end {
             font-family: monospace;
             font-size: 1rem;
-            font-weight: bold;
+            color: #2d3436; /* Match text color */
+        }
+
+        /* Form Styling */
+        #answer-form {
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* Center form elements */
+        }
+
+        label {
+            font-size: 1.2rem;
+            margin-bottom: 5px;
+            color: #2d3436;
         }
 
         /* Input Field */
         input[type="text"] {
             padding: 12px;
-            width: 80%;
+            width: 250px; /* Match start page input/select width */
+            max-width: 100%;
             margin: 10px 0;
             border: 2px solid #74b9ff;
             border-radius: 8px;
             font-size: 1rem;
             transition: all 0.3s ease-in-out;
             outline: none;
+            box-sizing: border-box;
         }
 
         input[type="text"]:focus {
@@ -93,10 +96,6 @@
         }
 
         /* Buttons */
-        .button-container {
-            margin-top: 15px;
-        }
-
         button {
             padding: 12px 25px;
             background: linear-gradient(135deg, #6c5ce7, #0984e3);
@@ -108,11 +107,24 @@
             transition: all 0.3s ease-in-out;
             margin: 10px;
             font-weight: 600;
+            width: 250px; /* Match start page button width */
+            max-width: 100%;
+            box-sizing: border-box;
         }
 
         button:hover {
             background: linear-gradient(135deg, #5f27cd, #0652dd);
             transform: scale(1.05);
+        }
+
+        /* Feedback and Next Link */
+        #feedback {
+            margin-top: 10px;
+            font-size: 1.1rem;
+        }
+
+        #next-question-link {
+            text-decoration: none; /* Remove underline from link */
         }
 
         /* Fade In Animation */
@@ -121,7 +133,6 @@
                 opacity: 0;
                 transform: translateY(-10px);
             }
-
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -129,8 +140,6 @@
         }
     </style>
 </head>
-
-
 <body>
     <h1>Question #<span id="question-number"></span></h1>
     <div id="audio-container">
@@ -139,21 +148,22 @@
         <input type="range" id="custom-progress" min="0" max="100" value="0" disabled>
         <span id="time-end"></span>
     </div>
+    <button id="replay-btn">Replay</button>
+    <br>
     <form id="answer-form">
         <label for="anime-name">Anime Name: </label>
         <input type="text" id="anime-name" name="anime-name" required>
-        <button type="submit">Submit</button>
+        <button id="submit-button" type="submit">Submit</button>
     </form>
-
-    <!-- Feedback message after answer submission -->
+ 
     <div id="feedback"></div>
 
     <a href="#" id="next-question-link" style="display:none;">
         <button>Next Question</button>
     </a>
 
-    <br>
-    <button id="replay-btn">Replay</button>
+    
+    
 
     <script>
         const urlParams = new URLSearchParams(window.location.search);
@@ -166,6 +176,7 @@
         const timeEnd = document.getElementById('time-end');
         const feedbackDiv = document.getElementById('feedback');
         const nextQuestionLink = document.getElementById('next-question-link');
+        const submitButton = document.getElementById('submit-button');
 
         function formatTime(seconds) {
             const minutes = Math.floor(seconds / 60);
@@ -222,9 +233,11 @@
                 feedbackDiv.textContent = `Incorrect! The correct answer is: ${correctAnswer}`;
                 feedbackDiv.style.color = 'red';
             }
-
+            submitButton.style.display = 'none';
+ 
             // Show the next question button
             nextQuestionLink.style.display = 'inline-block';
+            
         });
 
         document.getElementById('replay-btn').addEventListener('click', loadQuestion);
