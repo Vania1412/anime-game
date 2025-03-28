@@ -34,7 +34,7 @@ h1 {
     width: 250px;
     /* Match input/select width from start page */
     height: 20px;
-    margin-top: 10px;
+    margin-bottom: 5px;
     vertical-align: middle;
     appearance: none;
     background: #dfe6e9;

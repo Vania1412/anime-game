@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import './GameOverScreen.css';
 
 const GameOverScreen = ({ gameState, setGameState }) => {
   const [percentage, setPercentage] = useState('0.00');
@@ -24,10 +25,10 @@ const GameOverScreen = ({ gameState, setGameState }) => {
   };
 
   return (
-    <div className="game-container">
+    <div className="restart-container">
       <h1>Game Over!</h1>
       <p>Your final score is:</p>
-      <p className="score">
+      <p className="final-score">
         {score} / {totalQuestions} ({percentage}%)
       </p>
 

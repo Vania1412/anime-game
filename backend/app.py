@@ -83,10 +83,10 @@ def start_game():
         if not data:
             return jsonify({"error": "Invalid JSON format"}), 400
 
-        difficulty = int(data.get("difficulty", 3))
+        difficulty = float(data.get("difficulty", 3))
         question_count = int(data.get("question_count", 5))
 
-        questions = [get_random_song_clip(difficulty) for _ in range(min(question_count, len(YOUTUBE_PLAYLIST)))]
+        questions = [get_random_song_clip(difficulty) for _ in range(question_count)]
 
         return jsonify({
             "questions": questions,
@@ -97,33 +97,7 @@ def start_game():
     except Exception as e:
         app.logger.error(f"Error in start_game: {e}")
         return jsonify({"error": "Internal server error"}), 500
-
-@app.route('/check_answer', methods=['POST'])
-def check_answer():
-    """Check the user's answer and return feedback."""
-    try:
-        data = request.get_json()
-        if not data:
-            return jsonify({"error": "Invalid JSON format"}), 400
-
-        user_answer = data.get("answer", "").strip().lower()
-        question_index = data.get("question_index")
-        questions = data.get("questions")
-
-        if question_index is None or not questions or question_index >= len(questions):
-            return jsonify({"error": "Invalid question index"}), 400
-
-        correct_answer = questions[question_index]["correct_answer"].lower()
-        is_correct = user_answer == correct_answer
-
-        return jsonify({
-            "is_correct": is_correct,
-            "correct_answer": correct_answer
-        })
-    except Exception as e:
-        app.logger.error(f"Error in check_answer: {e}")
-        return jsonify({"error": "Internal server error"}), 500  
-
+ 
 # =========================
 # SERVE REACT FRONTEND
 # =========================

@@ -26,7 +26,7 @@ function QuestionScreen({ gameState, setGameState }) {
     const storedReplayCount = localStorage.getItem(`replayCount_${currentQuestion}`);
     setReplayCount(storedReplayCount !== null ? parseInt(storedReplayCount, 10) : 0);
 
-    timeEndRef.current.textContent = formatTime(difficulty);
+    timeEndRef.current.textContent = "  " + formatTime(difficulty);
 
     const audioPlayer = audioRef.current;
     audioPlayer.src = question.url;
@@ -55,7 +55,7 @@ function QuestionScreen({ gameState, setGameState }) {
     };
 
     if (timeStartRef.current) {
-      timeStartRef.current.textContent = '00:00';
+      timeStartRef.current.textContent = '00:00  ';
     }
 
     const randomStartTime = Math.floor(Math.random() * 90);
@@ -128,7 +128,7 @@ function QuestionScreen({ gameState, setGameState }) {
       <h1>Question #{currentQuestion + 1}</h1>
       <div id="audio-container">
         <audio ref={audioRef} style={{ display: 'none' }} />
-        <span ref={timeStartRef} id="time-start">00:00</span>
+        <span ref={timeStartRef} id="time-start">00:00  </span>
         <input
           type="range"
           id="custom-progress"
@@ -137,7 +137,7 @@ function QuestionScreen({ gameState, setGameState }) {
           value={progress} // Controlled by state
           disabled
         />
-        <span ref={timeEndRef} id="time-end">00:00</span>
+        <span ref={timeEndRef} id="time-end">  00:00</span>
       </div>
       <button
         id="replay-btn"
