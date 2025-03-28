@@ -23,7 +23,7 @@ h1 {
 }
 
 /* Audio Container */
-#audio-container { 
+#audio-container {
     align-items: center;
     gap: 10px;
     /* Consistent spacing */
@@ -131,6 +131,63 @@ button:hover {
 #see-score-link {
     text-decoration: none;
     /* Remove underline from link */
+}
+
+.reveal-button {
+    display: block;
+    margin: 10px auto 0;
+    /* Top margin 10px, centered horizontally */
+}
+
+/* Ensure the root container takes full height */
+.question-screen {
+    position: relative;
+    /* For absolute positioning of modal */
+}
+
+/* Modal container */
+.youtube-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 1000;
+}
+
+/* Dark overlay */
+.youtube-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 1001;
+}
+
+/* Centered content */
+.youtube-content {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1002;
+    display: flex;
+    justify-content: center;
+    /* Center iframe horizontally within content */
+    align-items: center;
+    /* Center iframe vertically within content */
+}
+
+/* Ensure iframe doesn’t stretch the content div */
+.youtube-content iframe {
+    max-width: 100%;
+    /* Responsive */
+    width: 560px;
+    /* Match your fixed width */
+    height: 320px;
+    /* Match your fixed height */
 }
 
 /* Fade In Animation */

@@ -61,14 +61,15 @@ def get_random_song_clip(difficulty):
             raise ValueError("No audio stream available.")
         
         duration = yt.length
-        start_time = random.randint(0, max(0, duration - difficulty))
+        start_time = random.randint(0, min(90 - difficulty, duration - difficulty))
         used_urls.add(url)
 
         return {
             "url": stream.url,
             "start_time": start_time,
             "correct_answer": ANSWER_LIST[r],
-            "title": ANSWER_LIST[r]
+            "title": ANSWER_LIST[r], 
+            "youtube_id": yt.video_id
         }
     except Exception as e:
         app.logger.error(f"Error fetching YouTube clip: {e}")

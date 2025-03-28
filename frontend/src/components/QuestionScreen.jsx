@@ -8,13 +8,14 @@ function QuestionScreen({ gameState, setGameState }) {
   const [feedback, setFeedback] = useState('');
   const [replayCount, setReplayCount] = useState(0);
   const [isSubmitButtonVisible, setIsSubmitButtonVisible] = useState(true);
+  const [showYouTube, setShowYouTube] = useState(false);
+  const [randomStart, setRandomStart] = useState(0);
+  const [progress, setProgress] = useState(0); // New state for progress
   const maxReplays = 2;
   const audioRef = useRef(null);
-  const progressRef = useRef(null);
   const timeStartRef = useRef(null);
   const timeEndRef = useRef(null);
   const navigate = useNavigate();
-  
 
   const { questions, difficulty, currentQuestion, score, totalQuestions } = gameState;
   const question = questions[currentQuestion] || {};
@@ -22,13 +23,8 @@ function QuestionScreen({ gameState, setGameState }) {
   useEffect(() => {
     if (!question.url) return;
 
-    // Load replay count from localStorage
     const storedReplayCount = localStorage.getItem(`replayCount_${currentQuestion}`);
-    if (storedReplayCount !== null) {
-      setReplayCount(parseInt(storedReplayCount, 10));
-    } else {
-      setReplayCount(0); 
-    }
+    setReplayCount(storedReplayCount !== null ? parseInt(storedReplayCount, 10) : 0);
 
     timeEndRef.current.textContent = formatTime(difficulty);
 
@@ -45,21 +41,25 @@ function QuestionScreen({ gameState, setGameState }) {
         const end = start + difficulty;
 
         if (currentTime >= start && currentTime < end) {
-          progressRef.current.value = Math.round(((currentTime - start) / difficulty) * 100);
+          const newProgress = Math.round(((currentTime - start) / difficulty) * 100);
+          setProgress(newProgress); // Update state instead of ref
         } else if (currentTime >= end) {
-          progressRef.current.value = 100;
+          setProgress(100); // Update state instead of ref
           audioPlayer.pause();
         }
       };
     };
 
     audioPlayer.onended = () => {
-      progressRef.current.value = 100;
+      setProgress(100); // Update state instead of ref
     };
 
     if (timeStartRef.current) {
       timeStartRef.current.textContent = '00:00';
     }
+
+    const randomStartTime = Math.floor(Math.random() * 90);
+    setRandomStart(randomStartTime);
   }, [currentQuestion, question.url, question.start_time, difficulty]);
 
   const formatTime = (seconds) => {
@@ -89,12 +89,12 @@ function QuestionScreen({ gameState, setGameState }) {
       const audioPlayer = audioRef.current;
       audioPlayer.pause();
       audioPlayer.currentTime = question.start_time || 0;
-      progressRef.current.value = 0;
+      setProgress(0); // Reset progress state
       audioPlayer.play().catch((error) => console.error("Replay failed:", error));
 
       setReplayCount((prev) => {
         const newCount = prev + 1;
-        localStorage.setItem(`replayCount_${currentQuestion}`, newCount); // Save to storage
+        localStorage.setItem(`replayCount_${currentQuestion}`, newCount);
         return newCount;
       });
     }
@@ -110,22 +110,33 @@ function QuestionScreen({ gameState, setGameState }) {
       setAnswer('');
       setFeedback('');
       setIsSubmitButtonVisible(true);
+      setShowYouTube(false);
       document.getElementById('next-question-link').style.display = 'none';
 
-      // Clear replay count for next question
       localStorage.removeItem(`replayCount_${currentQuestion + 1}`);
-    } else { 
-      navigate(`/game_over`); 
+    } else {
+      navigate(`/game_over`);
     }
   };
 
+  const closeYouTubeModal = () => {
+    setShowYouTube(false);
+  };
+
   return (
-    <div>
+    <div className="question-screen">
       <h1>Question #{currentQuestion + 1}</h1>
       <div id="audio-container">
         <audio ref={audioRef} style={{ display: 'none' }} />
         <span ref={timeStartRef} id="time-start">00:00</span>
-        <input type="range" ref={progressRef} id="custom-progress" min="0" max="100" value={0} disabled />
+        <input
+          type="range"
+          id="custom-progress"
+          min="0"
+          max="100"
+          value={progress} // Controlled by state
+          disabled
+        />
         <span ref={timeEndRef} id="time-end">00:00</span>
       </div>
       <button
@@ -158,6 +169,33 @@ function QuestionScreen({ gameState, setGameState }) {
       >
         {feedback}
       </div>
+
+      {!isSubmitButtonVisible && (
+        <button
+          id="reveal-btn"
+          className="reveal-button"
+          onClick={() => setShowYouTube(true)}
+        >
+          Reveal Clip Source
+        </button>
+      )}
+
+      {showYouTube && (
+        <div className="youtube-modal">
+          <div className="youtube-overlay" onClick={closeYouTubeModal}></div>
+          <div className="youtube-content">
+            <iframe
+              width="560"
+              height="320"
+              src={`https://www.youtube.com/embed/${question.youtube_id}?start=${question.start_time}&autoplay=1`}
+              title="YouTube video player"
+              allow="autoplay; encrypted-media"
+              allowFullScreen
+            ></iframe>
+          </div>
+        </div>
+      )}
+
       <a
         id="next-question-link"
         style={{ display: 'none' }}
