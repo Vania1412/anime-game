@@ -83,7 +83,7 @@ def start_game():
         if not data:
             return jsonify({"error": "Invalid JSON format"}), 400
 
-        difficulty = float(data.get("difficulty", 3))
+        difficulty = int(data.get("difficulty", 3))
         question_count = int(data.get("question_count", 5))
 
         questions = [get_random_song_clip(difficulty) for _ in range(question_count)]
