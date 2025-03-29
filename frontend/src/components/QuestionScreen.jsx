@@ -7,17 +7,17 @@ function QuestionScreen({ gameState, setGameState }) {
   const [answer, setAnswer] = useState('');
   const [feedback, setFeedback] = useState('');
   const [replayCount, setReplayCount] = useState(0);
-  const [isSubmitButtonVisible, setIsSubmitButtonVisible] = useState(true);
   const [showYouTube, setShowYouTube] = useState(false);
+  const [isLoadingNext, setIsLoadingNext] = useState(false);
   const [randomStart, setRandomStart] = useState(0);
   const [progress, setProgress] = useState(0); // New state for progress
-  const maxReplays = 2;
+  const [isAnswered, setIsAnswered] = useState(false);
   const audioRef = useRef(null);
   const timeStartRef = useRef(null);
   const timeEndRef = useRef(null);
   const navigate = useNavigate();
 
-  const { questions, difficulty, currentQuestion, score, totalQuestions, currentDeadModeQuestion } = gameState;
+  const { questions, difficulty, currentQuestion, score, totalQuestions, currentDeadModeQuestion, maxReplays } = gameState;
   const question = questions[currentQuestion] || {};
   const isDeathMode = JSON.parse(localStorage.getItem('isDeathMode') || 'false');
   console.log(isDeathMode)
@@ -27,6 +27,21 @@ function QuestionScreen({ gameState, setGameState }) {
 
     const storedReplayCount = localStorage.getItem(`replayCount_${currentQuestion}`);
     setReplayCount(storedReplayCount !== null ? parseInt(storedReplayCount, 10) : 0);
+
+    const answeredState = localStorage.getItem(`isAnswered_${currentQuestion}`);
+    setIsAnswered(answeredState === "true");
+
+    const answeredContent = localStorage.getItem(`answeredContent_${currentQuestion}`);
+    setAnswer(answeredContent !== null ? answeredContent : '');
+
+    if (answeredContent !== null) {
+      const correctAnswer = question.correct_answer;
+      if (answeredContent.trim() === correctAnswer) {
+        setFeedback('Correct!');
+      } else {
+        setFeedback(`Incorrect! The correct answer is: ${correctAnswer}`);
+      }
+    }
 
     timeEndRef.current.textContent = "  " + formatTime(difficulty);
 
@@ -71,7 +86,6 @@ function QuestionScreen({ gameState, setGameState }) {
   };
 
   const handleSubmit = (e) => {
-    console.log(isDeathMode)
     e.preventDefault();
     const userAnswer = answer.trim();
     const correctAnswer = question.correct_answer;
@@ -83,12 +97,14 @@ function QuestionScreen({ gameState, setGameState }) {
       setFeedback(`Incorrect! The correct answer is: ${correctAnswer}`);
     }
 
-    setIsSubmitButtonVisible(false);
     document.getElementById('next-question-link').style.display = 'inline-block';
-  };
+    setIsAnswered(true);
+    localStorage.setItem(`isAnswered_${currentQuestion}`, "true");
+    localStorage.setItem(`answeredContent_${currentQuestion}`, userAnswer);
+  }; 
 
   const handleReplay = () => {
-    if (replayCount < maxReplays && audioRef.current) {
+    if (audioRef.current) {
       const audioPlayer = audioRef.current;
       audioPlayer.pause();
       audioPlayer.currentTime = question.start_time || 0;
@@ -103,9 +119,12 @@ function QuestionScreen({ gameState, setGameState }) {
     }
   };
 
-const handleNext = async () => {
-  console.log(isDeathMode)
-  console.log(isDeathMode && answer.trim() !== question.correct_answer)
+  const handleNext = async () => {
+    if (isLoadingNext) return;
+    setIsLoadingNext(true);
+    console.log(currentQuestion)
+    localStorage.removeItem(`answeredContent_${currentQuestion}`);
+    localStorage.removeItem(`isAnswered_${currentQuestion}`);
     if (isDeathMode && answer.trim() !== question.correct_answer) {
       // In Death Mode, wrong answer means game over
       console.log(1)
@@ -142,6 +161,8 @@ const handleNext = async () => {
             currentQuestion: 0, // Reset question index
             currentDeadModeQuestion: prev.currentDeadModeQuestion + 1,
           }));
+          localStorage.setItem(`replayCount_${0}`, 0);
+          setReplayCount(0);
         } else {
           navigate("/game_over"); // End game if no new questions
         }
@@ -158,13 +179,16 @@ const handleNext = async () => {
     // Reset answer and feedback for the next question
     setAnswer('');
     setFeedback('');
-    setIsSubmitButtonVisible(true);
     setShowYouTube(false);
     document.getElementById('next-question-link').style.display = 'none';
+    setIsLoadingNext(false);
 
     // Clear replay count for the current question
+    console.log(currentQuestion)
     localStorage.removeItem(`replayCount_${currentQuestion + 1}`);
-};
+    localStorage.removeItem(`isAnswered_${currentQuestion + 1}`);
+    localStorage.removeItem(`answeredContent_${currentQuestion + 1}`);
+  };
 
 
   const closeYouTubeModal = () => {
@@ -187,14 +211,15 @@ const handleNext = async () => {
         />
         <span ref={timeEndRef} id="time-end">  00:00</span>
       </div>
-      <button
+      {maxReplays != 0 && <button
         id="replay-btn"
         onClick={handleReplay}
-        disabled={replayCount >= maxReplays}
-        style={{ cursor: replayCount >= maxReplays ? 'not-allowed' : 'pointer' }}
+        disabled={maxReplays != -1 && replayCount >= maxReplays}
+        style={{ cursor: replayCount >= maxReplays && maxReplays != -1 ? 'not-allowed' : 'pointer' }}
       >
-        Replay ({maxReplays - replayCount})
-      </button>
+        {maxReplays == -1 ? 'Replay' : `Replay (${maxReplays - replayCount})`}
+      </button>}
+      <br />
       <br />
       <form id="answer-form" onSubmit={handleSubmit}>
         <label htmlFor="anime-name">Anime Name:</label>
@@ -205,10 +230,13 @@ const handleNext = async () => {
           value={answer}
           onChange={(e) => setAnswer(e.target.value)}
           required
+          disabled={isAnswered} // Disable input if answered
         />
-        {isSubmitButtonVisible && (
+
+        {!isAnswered && (
           <button id="submit-button" type="submit">Submit</button>
         )}
+
       </form>
       <div
         id="feedback"
@@ -218,7 +246,7 @@ const handleNext = async () => {
         {feedback}
       </div>
 
-      {!isSubmitButtonVisible && (
+      {isAnswered && (
         <button
           id="reveal-btn"
           className="reveal-button"
@@ -246,7 +274,8 @@ const handleNext = async () => {
 
       <a
         id="next-question-link"
-        style={{ display: 'none' }}
+        style={isAnswered ? { display: 'inline-block' } : { display: 'none' }}
+        disabled={isLoadingNext}
         onClick={(e) => {
           e.preventDefault();
           handleNext();

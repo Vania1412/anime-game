@@ -6,6 +6,10 @@ import '../index.css';
 function StartScreen({ setGameState }) {
   const navigate = useNavigate();
   const [isDeathMode, setIsDeathMode] = useState(false);
+  const [maxReplays, setMaxReplays] = useState(2);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [tempMaxReplays, setTempMaxReplays] = useState(maxReplays);
+
 
   // Load Death Mode state from localStorage on mount
   useEffect(() => {
@@ -44,13 +48,15 @@ function StartScreen({ setGameState }) {
           score: 0,
           totalQuestions: data.questions.length,
           death_mode: isDeathMode,
-          currentDeadModeQuestion: 0
+          currentDeadModeQuestion: 0,
+          maxReplays,
         };
 
         setGameState(newGameState);
         localStorage.setItem('gameState', JSON.stringify(newGameState));
         localStorage.removeItem(`replayCount_${0}`);
         console.log(localStorage.getItem('isDeathMode'));
+        localStorage.setItem(`isAnswered_${0}`, false);
 
         navigate('/question');
       } else {
@@ -61,6 +67,11 @@ function StartScreen({ setGameState }) {
       document.getElementById('errorMessage').style.display = 'block';
       alert('Error starting game: ' + error.message);
     }
+  };
+
+  const openSettings = () => {
+    setTempMaxReplays(maxReplays); // Reset input to current value
+    setIsSettingsOpen(true);
   };
 
   return (
@@ -110,6 +121,42 @@ function StartScreen({ setGameState }) {
         <div id="errorMessage" style={{ color: 'red', display: 'none' }}>
           <p>Error starting the game!</p>
         </div>
+        <button id="settingsBtn" onClick={() => openSettings(true)}>⚙ Settings</button>
+         
+
+        {isSettingsOpen && (
+  <div className="modal-overlay">
+    <div className="modal">
+      <h2>Game Settings</h2>
+      <label htmlFor="maxReplays">Max Replays: </label>
+      <select
+  id="maxReplays"
+  value={tempMaxReplays}
+  onChange={(e) => setTempMaxReplays(e.target.value)}
+  className="small-select" // Apply class here
+>
+  <option value="0">0</option>
+  <option value="1">1</option>
+  <option value="2">2</option>
+  <option value="3">3</option>
+  <option value="-1">Infinity</option>
+</select>
+
+      <br />
+      <div className="modal-buttons">
+        <button onClick={() => setIsSettingsOpen(false)}>Close</button>
+        <button onClick={() => { 
+          setMaxReplays(tempMaxReplays); 
+          setIsSettingsOpen(false); 
+        }}>
+          Save
+        </button>
+        
+      </div>
+    </div>
+  </div>
+)}
+
       </div>
     </div>
   );

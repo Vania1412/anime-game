@@ -31,7 +31,7 @@ def get_random_song_clip(difficulty):
             raise ValueError("No audio stream available.")
         
         duration = yt.length
-        start_time = random.randint(0, min(90 - difficulty, duration - difficulty))
+        start_time = random.randint(0, min(89 - difficulty, duration - difficulty))
         used_urls.add(url)
 
         return {
