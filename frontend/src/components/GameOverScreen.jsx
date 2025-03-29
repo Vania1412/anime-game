@@ -7,7 +7,8 @@ const GameOverScreen = ({ gameState, setGameState }) => {
   const navigate = useNavigate();
   const { score, totalQuestions, currentDeadModeQuestion } = gameState;
 
-  const isDeathMode = localStorage.getItem('isDeathMode');
+  const isDeathMode = JSON.parse(localStorage.getItem('isDeathMode') || 'false');
+
 
   useEffect(() => {
     // Calculate percentage score
@@ -27,6 +28,7 @@ const GameOverScreen = ({ gameState, setGameState }) => {
       totalQuestions: 0,
       currentDeadModeQuestion: 0,
     });
+    localStorage.setItem('isDeathMode', "false");
     navigate('/'); // Go back to the start screen
   };
 

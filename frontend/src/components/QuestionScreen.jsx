@@ -19,7 +19,8 @@ function QuestionScreen({ gameState, setGameState }) {
 
   const { questions, difficulty, currentQuestion, score, totalQuestions, currentDeadModeQuestion } = gameState;
   const question = questions[currentQuestion] || {};
-  const isDeathMode = localStorage.getItem('isDeathMode');
+  const isDeathMode = JSON.parse(localStorage.getItem('isDeathMode') || 'false');
+  console.log(isDeathMode)
 
   useEffect(() => {
     if (!question.url) return;
@@ -70,6 +71,7 @@ function QuestionScreen({ gameState, setGameState }) {
   };
 
   const handleSubmit = (e) => {
+    console.log(isDeathMode)
     e.preventDefault();
     const userAnswer = answer.trim();
     const correctAnswer = question.correct_answer;
@@ -101,22 +103,27 @@ function QuestionScreen({ gameState, setGameState }) {
     }
   };
 
-  const handleNext = async () => {
-    if (isDeathMode && answer.trim() != question.correct_answer) {
+const handleNext = async () => {
+  console.log(isDeathMode)
+  console.log(isDeathMode && answer.trim() !== question.correct_answer)
+    if (isDeathMode && answer.trim() !== question.correct_answer) {
+      // In Death Mode, wrong answer means game over
+      console.log(1)
       setGameState((prev) => ({
         ...prev,
         currentDeadModeQuestion: prev.currentDeadModeQuestion + 1,
       }));
       navigate("/game_over");
     } else if (currentQuestion + 1 < questions.length) {
+      console.log(2)
+      // If we have more questions, move to the next one
       setGameState((prev) => ({
         ...prev,
         currentQuestion: prev.currentQuestion + 1,
         currentDeadModeQuestion: prev.currentDeadModeQuestion + 1,
       }));
-
-
-    } else if (isDeathMode) { 
+    } else if (isDeathMode) {
+      console.log(3)
       // If in Death Mode and all 10 questions are answered, fetch 10 more
       try {
         const response = await fetch("http://localhost:5000/next_question", {
@@ -143,16 +150,22 @@ function QuestionScreen({ gameState, setGameState }) {
         navigate("/game_over");
       }
     } else {
-      navigate("/game_over"); // If not in Death Mode, go to game over
+      console.log(4)
+      // If not in Death Mode and all questions are answered, show score
+      navigate("/game_over"); // Go to game over screen
     }
+
+    // Reset answer and feedback for the next question
     setAnswer('');
     setFeedback('');
     setIsSubmitButtonVisible(true);
     setShowYouTube(false);
     document.getElementById('next-question-link').style.display = 'none';
 
+    // Clear replay count for the current question
     localStorage.removeItem(`replayCount_${currentQuestion + 1}`);
-  };
+};
+
 
   const closeYouTubeModal = () => {
     setShowYouTube(false);

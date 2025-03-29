@@ -11,7 +11,8 @@ function StartScreen({ setGameState }) {
   useEffect(() => {
     const storedDeathMode = localStorage.getItem('isDeathMode');
     if (storedDeathMode !== null) {
-      setIsDeathMode(storedDeathMode === 'false');
+      setIsDeathMode(storedDeathMode === 'true');
+      console.log(localStorage.getItem('isDeathMode'));
     }
   }, []);
 
@@ -49,6 +50,7 @@ function StartScreen({ setGameState }) {
         setGameState(newGameState);
         localStorage.setItem('gameState', JSON.stringify(newGameState));
         localStorage.removeItem(`replayCount_${0}`);
+        console.log(localStorage.getItem('isDeathMode'));
 
         navigate('/question');
       } else {
