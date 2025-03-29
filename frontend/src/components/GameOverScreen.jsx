@@ -5,11 +5,16 @@ import './GameOverScreen.css';
 const GameOverScreen = ({ gameState, setGameState }) => {
   const [percentage, setPercentage] = useState('0.00');
   const navigate = useNavigate();
-  const { score, totalQuestions } = gameState;
+  const { score, totalQuestions, currentDeadModeQuestion } = gameState;
+
+  const isDeathMode = localStorage.getItem('isDeathMode');
 
   useEffect(() => {
     // Calculate percentage score
-    const percentageScore = ((score / totalQuestions) * 100).toFixed(2);
+    let percentageScore = ((score / totalQuestions) * 100).toFixed(2);
+    if (isDeathMode) {
+      percentageScore = ((score/ currentDeadModeQuestion) * 100).toFixed(2);
+    }
     setPercentage(percentageScore);
   }, [score, totalQuestions]);
 
@@ -20,6 +25,7 @@ const GameOverScreen = ({ gameState, setGameState }) => {
       currentQuestion: 0,
       score: 0,
       totalQuestions: 0,
+      currentDeadModeQuestion: 0,
     });
     navigate('/'); // Go back to the start screen
   };
@@ -29,7 +35,7 @@ const GameOverScreen = ({ gameState, setGameState }) => {
       <h1>Game Over!</h1>
       <p>Your final score is:</p>
       <p className="final-score">
-        {score} / {totalQuestions} ({percentage}%)
+        {isDeathMode ? `${score} / ${currentDeadModeQuestion} (${percentage}%)` : `${score} / ${totalQuestions} (${percentage}%)`}
       </p>
 
       <button onClick={handlePlayAgain}>

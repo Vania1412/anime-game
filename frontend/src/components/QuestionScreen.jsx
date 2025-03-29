@@ -17,8 +17,9 @@ function QuestionScreen({ gameState, setGameState }) {
   const timeEndRef = useRef(null);
   const navigate = useNavigate();
 
-  const { questions, difficulty, currentQuestion, score, totalQuestions } = gameState;
+  const { questions, difficulty, currentQuestion, score, totalQuestions, currentDeadModeQuestion } = gameState;
   const question = questions[currentQuestion] || {};
+  const isDeathMode = localStorage.getItem('isDeathMode');
 
   useEffect(() => {
     if (!question.url) return;
@@ -100,23 +101,57 @@ function QuestionScreen({ gameState, setGameState }) {
     }
   };
 
-  const handleNext = () => {
-    if (currentQuestion + 1 < questions.length) {
+  const handleNext = async () => {
+    if (isDeathMode && answer.trim() != question.correct_answer) {
+      setGameState((prev) => ({
+        ...prev,
+        currentDeadModeQuestion: prev.currentDeadModeQuestion + 1,
+      }));
+      navigate("/game_over");
+    } else if (currentQuestion + 1 < questions.length) {
       setGameState((prev) => ({
         ...prev,
         currentQuestion: prev.currentQuestion + 1,
+        currentDeadModeQuestion: prev.currentDeadModeQuestion + 1,
       }));
 
-      setAnswer('');
-      setFeedback('');
-      setIsSubmitButtonVisible(true);
-      setShowYouTube(false);
-      document.getElementById('next-question-link').style.display = 'none';
 
-      localStorage.removeItem(`replayCount_${currentQuestion + 1}`);
+    } else if (isDeathMode) { 
+      // If in Death Mode and all 10 questions are answered, fetch 10 more
+      try {
+        const response = await fetch("http://localhost:5000/next_question", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ difficulty, is_death_mode: true }),
+        });
+
+        if (!response.ok) throw new Error("Failed to fetch new questions");
+
+        const data = await response.json();
+        if (data.questions && data.questions.length > 0) {
+          setGameState((prev) => ({
+            ...prev,
+            questions: data.questions,
+            currentQuestion: 0, // Reset question index
+            currentDeadModeQuestion: prev.currentDeadModeQuestion + 1,
+          }));
+        } else {
+          navigate("/game_over"); // End game if no new questions
+        }
+      } catch (error) {
+        console.error("Error fetching next batch:", error);
+        navigate("/game_over");
+      }
     } else {
-      navigate(`/game_over`);
+      navigate("/game_over"); // If not in Death Mode, go to game over
     }
+    setAnswer('');
+    setFeedback('');
+    setIsSubmitButtonVisible(true);
+    setShowYouTube(false);
+    document.getElementById('next-question-link').style.display = 'none';
+
+    localStorage.removeItem(`replayCount_${currentQuestion + 1}`);
   };
 
   const closeYouTubeModal = () => {
@@ -125,7 +160,7 @@ function QuestionScreen({ gameState, setGameState }) {
 
   return (
     <div className="question-screen">
-      <h1>Question #{currentQuestion + 1}</h1>
+      <h1>Question #{currentDeadModeQuestion + 1}</h1>
       <div id="audio-container">
         <audio ref={audioRef} style={{ display: 'none' }} />
         <span ref={timeStartRef} id="time-start">00:00  </span>
@@ -205,7 +240,7 @@ function QuestionScreen({ gameState, setGameState }) {
         }}
       >
         <button id="next-question-btn">
-          {currentQuestion + 1 < totalQuestions ? 'Next Question' : 'See Score'}
+          {!isDeathMode && currentQuestion + 1 < totalQuestions || isDeathMode && answer.trim() == question.correct_answer ? 'Next Question' : 'See Score'}
         </button>
       </a>
     </div>

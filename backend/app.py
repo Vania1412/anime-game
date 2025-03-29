@@ -8,50 +8,33 @@ from pytubefix.cli import on_progress
 app = Flask(__name__, static_folder='dist', static_url_path='/')
 CORS(app)  # Enable CORS for React frontend
 
-# Sample YouTube Playlist and Answers
-YOUTUBE_PLAYLIST = [
-    "https://youtu.be/zkOYWw0u8as",
-    "https://youtu.be/wOleNo7T6_4",
-    "https://youtu.be/asyT-N1Ip70",
-    "https://youtu.be/60_2zt9l3Yk",
-    "https://youtu.be/S3v5gcwNeE8",
-    "https://youtu.be/S0_qFgkDJxg",
-    "https://youtu.be/iOrkj_MFXm8",
-    "https://youtu.be/_5WvUPHF5f8",
-    "https://youtu.be/oG4eu4HMtbo",
-    "https://youtu.be/VekCU4YJiR8",
-    "https://youtu.be/-jYqJCzZ8zs",
-    "https://youtu.be/FWXkipC-vqs",
-]
+# Dictionary mapping YouTube links to anime titles
+YOUTUBE_CLIPS = {
+    "https://youtu.be/zkOYWw0u8as": "SAKAMOTO DAYS",
+    "https://youtu.be/wOleNo7T6_4": "The Apothecary Diaries",
+    "https://youtu.be/asyT-N1Ip70": "Danjon Meshi",
+    "https://youtu.be/60_2zt9l3Yk": "Danjon Meshi",
+    "https://youtu.be/S3v5gcwNeE8": "Moriarty the Patriot",
+    "https://youtu.be/S0_qFgkDJxg": "Moriarty the Patriot",
+    "https://youtu.be/iOrkj_MFXm8": "GOSICK",
+    "https://youtu.be/_5WvUPHF5f8": "DEADMAN WONDERLAND",
+    "https://youtu.be/oG4eu4HMtbo": "My Dress-Up Darling",
+    "https://youtu.be/VekCU4YJiR8": "Banana Fish",
+    "https://youtu.be/-jYqJCzZ8zs": "Banana Fish",
+    "https://youtu.be/FWXkipC-vqs": "BanG Dream! Ave Mujica",
+}
 
-ANSWER_LIST = [
-    "SAKAMOTO DAYS",
-    "The Apothecary Diaries",
-    "Danjon Meshi",
-    "Danjon Meshi",
-    "Moriarty the Patriot",
-    "Moriarty the Patriot",
-    "GOSICK",
-    "DEADMAN WONDERLAND",
-    "My Dress-Up Darling",
-    "Banana Fish",
-    "Banana Fish",
-    "BanG Dream! Ave Mujica",
-]
-
-# Set to keep track of used links
+# Set to track used URLs
 used_urls = set()
 
 def get_random_song_clip(difficulty):
     """Fetch a random song and extract a clip, ensuring no duplicate link."""
-    if len(used_urls) == len(YOUTUBE_PLAYLIST):
+    if len(used_urls) == len(YOUTUBE_CLIPS):
         used_urls.clear()  # Reset if all links are used
 
-    r = random.randint(0, len(YOUTUBE_PLAYLIST) - 1)
-    url = YOUTUBE_PLAYLIST[r]
+    url = random.choice(list(YOUTUBE_CLIPS.keys()))
     while url in used_urls:
-        r = random.randint(0, len(YOUTUBE_PLAYLIST) - 1)
-        url = YOUTUBE_PLAYLIST[r]
+        url = random.choice(list(YOUTUBE_CLIPS.keys()))
 
     try:
         yt = YouTube(url, on_progress_callback=on_progress)
@@ -67,8 +50,8 @@ def get_random_song_clip(difficulty):
         return {
             "url": stream.url,
             "start_time": start_time,
-            "correct_answer": ANSWER_LIST[r],
-            "title": ANSWER_LIST[r], 
+            "correct_answer": YOUTUBE_CLIPS[url],  # Get anime title
+            "title": YOUTUBE_CLIPS[url],
             "youtube_id": yt.video_id
         }
     except Exception as e:
@@ -84,9 +67,15 @@ def start_game():
             return jsonify({"error": "Invalid JSON format"}), 400
 
         difficulty = int(data.get("difficulty", 3))
-        question_count = int(data.get("question_count", 5))
+ 
+        is_death_mode = data.get("death_mode", False)
 
-        questions = [get_random_song_clip(difficulty) for _ in range(question_count)]
+        if is_death_mode:
+            # Generate the first 10 questions for Death Mode
+            questions = [get_random_song_clip(difficulty) for _ in range(3)]
+        else:
+            question_count = int(data.get("question_count", 5))
+            questions = [get_random_song_clip(difficulty) for _ in range(question_count)]
 
         return jsonify({
             "questions": questions,
@@ -98,6 +87,29 @@ def start_game():
         app.logger.error(f"Error in start_game: {e}")
         return jsonify({"error": "Internal server error"}), 500
  
+@app.route('/next_question', methods=['POST'])
+def next_question():
+    """Handles fetching a new question when in Death Mode."""
+    print("getting new questions")
+    try:
+        data = request.get_json()
+        if not data or "difficulty" not in data:
+            return jsonify({"error": "Invalid request format"}), 400
+
+        difficulty = int(data["difficulty"])
+        is_death_mode = data.get("is_death_mode", False)
+
+        if is_death_mode:
+            # Generate the next batch of 10 questions
+            questions = [get_random_song_clip(difficulty) for _ in range(3)]
+            return jsonify({"questions": questions})
+
+        return jsonify({"error": "This endpoint is only for Death Mode"}), 400
+    except Exception as e:
+        app.logger.error(f"Error in next_question: {e}")
+        return jsonify({"error": "Internal server error"}), 500
+    
+
 # =========================
 # SERVE REACT FRONTEND
 # =========================

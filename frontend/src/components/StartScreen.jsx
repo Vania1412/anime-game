@@ -1,36 +1,53 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './StartScreen.css';
 import '../index.css';
 
 function StartScreen({ setGameState }) {
   const navigate = useNavigate();
+  const [isDeathMode, setIsDeathMode] = useState(false);
+
+  // Load Death Mode state from localStorage on mount
+  useEffect(() => {
+    const storedDeathMode = localStorage.getItem('isDeathMode');
+    if (storedDeathMode !== null) {
+      setIsDeathMode(storedDeathMode === 'false');
+    }
+  }, []);
+
+  const handleToggle = () => {
+    const newMode = !isDeathMode;
+    setIsDeathMode(newMode);
+    localStorage.setItem('isDeathMode', newMode); // Save to localStorage
+  };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     const difficulty = event.target.difficulty.value;
-    const questionCount = parseInt(event.target.question_count.value, 10);
+    const questionCount = isDeathMode ? 3 : parseInt(event.target.question_count.value, 10);
 
     try {
       const response = await fetch('http://localhost:5000/start_game', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ difficulty, question_count: questionCount }),
+        body: JSON.stringify({ difficulty, question_count: questionCount, death_mode: isDeathMode }),
       });
+
       const data = await response.json();
 
       if (data.questions) {
-        // Reset game state and save to localStorage
         const newGameState = {
           questions: data.questions,
           difficulty: parseInt(data.difficulty),
           currentQuestion: 0,
           score: 0,
           totalQuestions: data.questions.length,
+          death_mode: isDeathMode,
+          currentDeadModeQuestion: 0
         };
 
         setGameState(newGameState);
-        localStorage.setItem('gameState', JSON.stringify(newGameState)); // Save to localStorage
+        localStorage.setItem('gameState', JSON.stringify(newGameState));
         localStorage.removeItem(`replayCount_${0}`);
 
         navigate('/question');
@@ -59,16 +76,29 @@ function StartScreen({ setGameState }) {
 
           <div className="row"></div>
 
-          <label htmlFor="question_count">Select Number of Questions:</label>
+          {!isDeathMode && (
+            <>
+              <label htmlFor="question_count">Select Number of Questions:</label>
+              <div className="row"></div>
+              <input
+                type="number"
+                id="question_count"
+                name="question_count"
+                min="1"
+                max="100"
+                defaultValue="5"
+              />
+            </>
+          )}
+
+          <div className="toggle-container" onClick={handleToggle}>
+            <div className={`toggle-slider ${isDeathMode ? 'on' : 'off'}`}>
+              <div className="toggle-circle"></div>
+            </div>
+            <span>{isDeathMode ? 'Death Mode' : 'Normal Mode'}</span>
+          </div>
+
           <div className="row"></div>
-          <input
-            type="number"
-            id="question_count"
-            name="question_count"
-            min="1"
-            max="100"
-            defaultValue="5"
-          />
 
           <button type="submit" id="startGameBtn">Start Game</button>
         </form>
