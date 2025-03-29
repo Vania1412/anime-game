@@ -8,14 +8,13 @@ const GameOverScreen = ({ gameState, setGameState }) => {
   const { score, totalQuestions, currentDeadModeQuestion } = gameState;
 
   const isDeathMode = JSON.parse(localStorage.getItem('isDeathMode') || 'false');
+  console.log(isDeathMode)
 
 
   useEffect(() => {
     // Calculate percentage score
-    let percentageScore = ((score / totalQuestions) * 100).toFixed(2);
-    if (isDeathMode) {
-      percentageScore = ((score/ currentDeadModeQuestion) * 100).toFixed(2);
-    }
+    const percentageScore = ((score / totalQuestions) * 100).toFixed(2);
+
     setPercentage(percentageScore);
   }, [score, totalQuestions]);
 
@@ -35,10 +34,19 @@ const GameOverScreen = ({ gameState, setGameState }) => {
   return (
     <div className="restart-container">
       <h1>Game Over!</h1>
-      <p>Your final score is:</p>
-      <p className="final-score">
-        {isDeathMode ? `${score} / ${currentDeadModeQuestion} (${percentage}%)` : `${score} / ${totalQuestions} (${percentage}%)`}
-      </p>
+      {isDeathMode ? (
+        <div>
+          <p>You were defeated.</p>
+          <p className="final-score">After answering {score} question{score <= 1 ? '': 's'} correctly</p>
+        </div>
+      ) : (
+        <div>
+          <p>Your final score is:</p>
+          <p className="final-score">
+            {score} / {totalQuestions} ({percentage}%)
+          </p>
+        </div>
+      )}
 
       <button onClick={handlePlayAgain}>
         Play Again

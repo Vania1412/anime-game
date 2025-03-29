@@ -19,7 +19,7 @@ h1 {
   text-align: center; /* Ensure text is centered */
 }
  
-
+ 
 
 /* Center the game container */
 .game-container {
@@ -111,8 +111,7 @@ button:hover {
   display: flex;
   align-items: center;
   justify-content: center; /* Ensure it's centered */
-  width: 100%; /* Take full width */
-  margin-top: 10px;
+  width: 100%; /* Take full width */ 
   margin-bottom: 10px;
 }
 .toggle-slider {

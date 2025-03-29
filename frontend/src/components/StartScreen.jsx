@@ -75,7 +75,8 @@ function StartScreen({ setGameState }) {
             <option value="3">3 Seconds</option>
             <option value="5">5 Seconds</option>
           </select>
-
+          <br></br>
+          
           <div className="row"></div>
 
           {!isDeathMode && (
@@ -90,7 +91,9 @@ function StartScreen({ setGameState }) {
                 max="100"
                 defaultValue="5"
               />
+              <br></br>
             </>
+            
           )}
 
           <div className="toggle-container" onClick={handleToggle}>
