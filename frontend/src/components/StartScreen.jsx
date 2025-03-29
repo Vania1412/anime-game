@@ -24,7 +24,7 @@ function StartScreen({ setGameState }) {
   const handleSubmit = async (event) => {
     event.preventDefault();
     const difficulty = event.target.difficulty.value;
-    const questionCount = isDeathMode ? 3 : parseInt(event.target.question_count.value, 10);
+    const questionCount = isDeathMode ? 5 : parseInt(event.target.question_count.value, 10);
 
     try {
       const response = await fetch('http://localhost:5000/start_game', {

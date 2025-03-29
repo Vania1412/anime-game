@@ -72,7 +72,7 @@ def start_game():
 
         if is_death_mode:
             # Generate the first 10 questions for Death Mode
-            questions = [get_random_song_clip(difficulty) for _ in range(3)]
+            questions = [get_random_song_clip(difficulty) for _ in range(5)]
         else:
             question_count = int(data.get("question_count", 5))
             questions = [get_random_song_clip(difficulty) for _ in range(question_count)]
@@ -101,7 +101,7 @@ def next_question():
 
         if is_death_mode:
             # Generate the next batch of 10 questions
-            questions = [get_random_song_clip(difficulty) for _ in range(3)]
+            questions = [get_random_song_clip(difficulty) for _ in range(5)]
             return jsonify({"questions": questions})
 
         return jsonify({"error": "This endpoint is only for Death Mode"}), 400
