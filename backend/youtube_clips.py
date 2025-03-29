@@ -1,5 +1,5 @@
 # Dictionary mapping YouTube links to anime titles
-YOUTUBE_CLIPS0 = {
+YOUTUBE_CLIPS_2025 = {
     "https://youtu.be/zkOYWw0u8as": "SAKAMOTO DAYS",
     "https://youtu.be/wOleNo7T6_4": "The Apothecary Diaries",
     "https://youtu.be/asyT-N1Ip70": "Danjon Meshi",
@@ -15,6 +15,42 @@ YOUTUBE_CLIPS0 = {
 }
 
 YOUTUBE_CLIPS = {
+    "https://youtu.be/BYfAYpGxcNY": "Mekakucity Actors",
+    "https://youtu.be/0hMz1J6EWWc": "KamiKatsu: Working for God in a Godless World",
+    "https://youtu.be/Tt4_enX63K0": "Zom 100: Bucket List of the Dead",
+    "https://youtu.be/tPeDnl1xBuk": "Black Butler",
+    "https://youtu.be/Rm8UjBAS3cs": "Parasyte",
+    "https://youtu.be/z9JZB08qy44": "The Apothecary Diaries",
+    "https://youtu.be/29pmd1QiK-4": "The Apothecary Diaries",
+    "https://youtu.be/PAcf55v6zqQ": "Oshi No Ko",
+    "https://youtu.be/Wb-EeKm497o": "Haikyu!!",
+    "https://youtu.be/qxoxR5KnqUk": "Detective Conan",
+    "https://youtu.be/WRrZr6k7ZSU": "Demon Slayer",
+    "https://youtu.be/XmpgKUcm2nI": "Nige Jozu no Wakagimi",
+    "https://youtu.be/W4YKPLS7o8o": "How I Attended an All-Guy's Mixer",
+    "https://youtu.be/_CraJ8654Bg": "BanG Dream! It's MyGO!!!!!",
+    "https://youtu.be/IuSAC8ZDf1A": "WIND BREAKER",
+    "https://youtu.be/ZZvIVRQ4E7I": "Shikanoko Nokonoko Koshitantan",
+    "https://youtu.be/7GJOBkIgWHc": "Too Many Losing Heroines!",
+    "https://youtu.be/a4na2opArGY": "Dandadan", 
+    "https://youtu.be/KV8HGbACPzM": "Senpai Is an Otokonoko",
+    "https://youtu.be/Bcy8yp6iYGI": "Oblivion Battery",
+    "https://youtu.be/CFjI21M9wZs": "Kaiju No. 8",
+    "https://youtu.be/PJirQlsWemk": "Skip and Loafer",
+    "https://youtu.be/Za2FmwuIEwY": "The Dangers in My Heart",
+    "https://youtu.be/j66_MdDhs-Y": "Let This Grieving Soul Retire!",
+    "https://youtu.be/YDLafQ-Rg-k": "GIRLS BAND CRY",
+    "https://youtu.be/4cTV5fWkqew": "Negative Positive Angler",
+    "https://youtu.be/210R0ozmLwg": "Mashle: Magic and Muscles",
+    "https://youtu.be/eZAocot63s8": "Orb: On the Movements of the Earth",
+    "https://youtu.be/A0tKGpKOU4Y": "The Dangers in My Heart",
+    "https://youtu.be/qU1XxZ37j7g": "BLUE LOCK",
+    "https://youtu.be/pA-pzhQQFBA": "GIRLS BAND CRY",
+    "https://youtu.be/ovW7yRi1iJ8": "Dandadan",
+    "https://youtu.be/aiCMXJ4zKWA": "Kaiju No. 8",
+}
+
+YOUTUBE_CLIPS_S = {
     "https://youtu.be/3uHGkJbNkX0": "Mairimashita Iruma-kun",
     "https://youtu.be/DEAjG94U-Vk": "Mairimashita Iruma-kun",
     "https://youtu.be/RapvVfKmEUM": "Mairimashita Iruma-kun",

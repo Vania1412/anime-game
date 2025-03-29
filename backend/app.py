@@ -4,7 +4,7 @@ import os
 import random
 from pytubefix import YouTube
 from pytubefix.cli import on_progress
-from youtube_clips import YOUTUBE_CLIPS, YOUTUBE_CLIPS0
+from youtube_clips import YOUTUBE_CLIPS 
 
 
 app = Flask(__name__, static_folder='dist', static_url_path='/')
