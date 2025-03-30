@@ -110,19 +110,18 @@ button:hover {
 .toggle-container {
   display: flex;
   align-items: center;
-  justify-content: center; /* Ensure it's centered */
-  width: 100%; /* Take full width */ 
+  justify-content: center;  
   margin-bottom: 10px;
 }
-.toggle-slider {
+.toggle-slider, .toggle-slider-multi {
   width: 50px;
-  height: 25px;
-  border-radius: 20px;
+  height: 24px;
   background-color: #ccc;
+  border-radius: 12px;
   position: relative;
-  transition: background-color 0.3s ease;
-  margin-right: 10px;
+  cursor: pointer;
 }
+
 
 .toggle-slider.on {
   background-color: #ff5555;
@@ -147,16 +146,7 @@ button:hover {
 .toggle-slider.on .toggle-circle {
   left: 25px;
 }
-
-.toggle-slider-multi {
-  width: 50px;
-  height: 25px;
-  border-radius: 20px;
-  background-color: #ccc;
-  position: relative;
-  transition: background-color 0.3s ease;
-  margin-right: 10px;
-}
+ 
 
 .toggle-slider-multi.on {
   background-color: #0ba22c;
@@ -169,7 +159,10 @@ button:hover {
 .toggle-slider-multi.on .toggle-circle {
   left: 25px;
 }
-
+span {
+  margin-left: 10px;
+  cursor: pointer;
+}
 /* Modal Background */
 .modal-overlay {
   position: fixed;

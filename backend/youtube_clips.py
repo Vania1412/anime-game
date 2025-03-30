@@ -11,6 +11,7 @@ YOUTUBE_CLIPS_2025 = {
     "https://youtu.be/oG4eu4HMtbo": "My Dress-Up Darling",
     "https://youtu.be/VekCU4YJiR8": "Banana Fish",
     "https://youtu.be/-jYqJCzZ8zs": "Banana Fish",
+    "https://youtu.be/M4VKa01PPnY": "Medaka Kuroiwa Is Impervious to My Charms",
     "https://youtu.be/FWXkipC-vqs": "BanG Dream! Ave Mujica",
 }
 

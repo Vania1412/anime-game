@@ -72,37 +72,29 @@ function QuestionScreen({ gameState, setGameState }) {
     const audioPlayer = audioRef.current;
     if (!isMultiTrackMode) {
       audioPlayer.src = question.url;
-      audioPlayer.currentTime = question.start_time || 0;
-
-      aaudioPlayer.onloadedmetadata = function () {
-        audioPlayer.currentTime = question.start_time;
-
-        // Ensure playback starts only after seeking
-        audioPlayer.play().then(() => {
-          console.log("Audio started at:", audioPlayer.currentTime);
-        }).catch(error => {
-          console.error("Playback failed:", error);
-        });
-
-        audioPlayer.ontimeupdate = function () {
-          const currentTime = audioPlayer.currentTime;
-          const start = question.start_time;
-          const end = question.start_time + difficulty;
-
-          if (currentTime >= start && currentTime < end) {
-            const newProgress = Math.min(100, Math.round(((currentTime - startTime) / (endTime - startTime)) * 100));
-            setProgress(newProgress);
-          } else if (currentTime >= end) {
-            setProgress(100);
-            audioPlayer.pause();  // Pause at exact time
-            console.log("Paused at:", audioPlayer.currentTime);
-          }
-        };
-      };
-
-      audioPlayer.onended = () => {
-        setProgress(100); // Update state instead of ref
-      };
+     audioPlayer.currentTime = question.start_time || 0;
+ 
+     audioPlayer.onloadedmetadata = () => {
+       audioPlayer.play().catch((error) => console.error("Playback failed:", error));
+ 
+       audioPlayer.ontimeupdate = () => {
+         const currentTime = audioPlayer.currentTime;
+         const start = question.start_time || 0;
+         const end = start + difficulty;
+ 
+         if (currentTime >= start && currentTime < end) {
+           const newProgress = Math.round(((currentTime - start) / difficulty) * 100);
+           setProgress(newProgress); // Update state instead of ref
+         } else if (currentTime >= end) {
+           setProgress(100); // Update state instead of ref
+           audioPlayer.pause();
+         }
+       };
+     };
+ 
+     audioPlayer.onended = () => {
+       setProgress(100); // Update state instead of ref
+     };
     } else {
       const audioPlayer2 = audioRef2.current;
 
@@ -243,12 +235,14 @@ function QuestionScreen({ gameState, setGameState }) {
     if (replayCount >= maxReplays && maxReplays != -1) return;
 
     if (!isMultiTrackMode) {
-      const audioPlayer = audioRef.current;
-      if (audioPlayer) {
+      if (audioRef.current) {
+        const audioPlayer = audioRef.current;
         audioPlayer.pause();
         audioPlayer.currentTime = question.start_time || 0;
-        setProgress(0);
+        setProgress(0); // Reset progress state
         audioPlayer.play().catch((error) => console.error("Replay failed:", error));
+  
+         
       }
     } else {
       const audioPlayer = audioRef.current;
