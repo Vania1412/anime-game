@@ -12,15 +12,16 @@ function QuestionScreen({ gameState, setGameState }) {
   const [randomStart, setRandomStart] = useState(0);
   const [progress, setProgress] = useState(0); // New state for progress
   const [isAnswered, setIsAnswered] = useState(false);
+  const [remainingLife, setRemainingLife] = useState(0);
   const audioRef = useRef(null);
   const timeStartRef = useRef(null);
   const timeEndRef = useRef(null);
   const navigate = useNavigate();
 
-  const { questions, difficulty, currentQuestion, score, totalQuestions, currentDeadModeQuestion, maxReplays } = gameState;
+
+  const { questions, difficulty, currentQuestion, score, totalQuestions, currentDeadModeQuestion, maxReplays, maxLives } = gameState;
   const question = questions[currentQuestion] || {};
   const isDeathMode = JSON.parse(localStorage.getItem('isDeathMode') || 'false');
-  console.log(isDeathMode)
 
   useEffect(() => {
     if (!question.url) return;
@@ -33,6 +34,10 @@ function QuestionScreen({ gameState, setGameState }) {
 
     const answeredContent = localStorage.getItem(`answeredContent_${currentQuestion}`);
     setAnswer(answeredContent !== null ? answeredContent : '');
+
+    const remainLife = localStorage.getItem(`totalLife`)
+    setRemainingLife(remainLife !== null ? parseInt(remainLife, 10) : maxLives);
+
 
     if (answeredContent !== null) {
       const correctAnswer = question.correct_answer;
@@ -89,19 +94,25 @@ function QuestionScreen({ gameState, setGameState }) {
     e.preventDefault();
     const userAnswer = answer.trim();
     const correctAnswer = question.correct_answer;
+    console.log("max lifes")
+    console.log(maxLives)
 
     if (userAnswer === correctAnswer) {
       setFeedback('Correct!');
       setGameState((prev) => ({ ...prev, score: prev.score + 1 }));
     } else {
       setFeedback(`Incorrect! The correct answer is: ${correctAnswer}`);
+      if (isDeathMode) {
+        localStorage.setItem('totalLife', remainingLife - 1)
+        setRemainingLife(remainingLife - 1)
+      }
     }
 
     document.getElementById('next-question-link').style.display = 'inline-block';
     setIsAnswered(true);
     localStorage.setItem(`isAnswered_${currentQuestion}`, "true");
     localStorage.setItem(`answeredContent_${currentQuestion}`, userAnswer);
-  }; 
+  };
 
   const handleReplay = () => {
     if (audioRef.current) {
@@ -125,7 +136,7 @@ function QuestionScreen({ gameState, setGameState }) {
     console.log(currentQuestion)
     localStorage.removeItem(`answeredContent_${currentQuestion}`);
     localStorage.removeItem(`isAnswered_${currentQuestion}`);
-    if (isDeathMode && answer.trim() !== question.correct_answer) {
+    if (isDeathMode && answer.trim() !== question.correct_answer && remainingLife == 0) {
       // In Death Mode, wrong answer means game over
       console.log(1)
       setGameState((prev) => ({
@@ -196,7 +207,7 @@ function QuestionScreen({ gameState, setGameState }) {
   };
 
   return (
-    <div className="question-screen">
+    <div >
       <h1>Question #{currentDeadModeQuestion + 1}</h1>
       <div id="audio-container">
         <audio ref={audioRef} style={{ display: 'none' }} />
@@ -282,9 +293,21 @@ function QuestionScreen({ gameState, setGameState }) {
         }}
       >
         <button id="next-question-btn">
-          {!isDeathMode && currentQuestion + 1 < totalQuestions || isDeathMode && answer.trim() == question.correct_answer ? 'Next Question' : 'See Score'}
+          {!isDeathMode && currentQuestion + 1 < totalQuestions || isDeathMode && remainingLife > 0 ? 'Next Question' : 'See Score'}
         </button>
       </a>
+      {isDeathMode && <div className="lives-container">
+        {[...Array(maxLives)].map((_, index) => (
+          <span
+            key={index}
+            className={`heart-icon ${index < remainingLife ? 'full-heart' : 'empty-heart'}`}
+          >
+            {index < remainingLife ? '❤️' : '🖤'}
+          </span>
+        ))}
+      </div>}
+
+
     </div>
   );
 }

@@ -9,18 +9,19 @@ body {
     align-items: center;
     height: 100vh;
     text-align: center;
-    flex-direction: column;
-    /* Stack elements vertically */
-}
-
-/* Title Styling */
-h1 {
+    flex-direction: column;  /* Stack elements vertically */
+    position: relative;  /* Ensure absolute positioning works properly for children */
+  }
+  
+  /* Title Styling */
+  h1 {
     font-size: 2.5rem;
     color: #2d3436;
     margin-bottom: 15px;
     font-weight: 600;
     margin-top: 0;
-}
+  }
+  
 
 /* Audio Container */
 #audio-container {
@@ -151,11 +152,11 @@ button:hover {
     /* Top margin 10px, centered horizontally */
 }
 
-/* Ensure the root container takes full height */
-.question-screen {
-    position: relative;
-    /* For absolute positioning of modal */
-}
+  /* Ensure the root container takes full height */
+  .question-screen {
+    position: relative; /* Ensures elements inside are positioned correctly */
+    padding-top: 50px;  /* Add space for hearts if needed */
+  }
 
 /* Modal container */
 .youtube-modal {
@@ -201,6 +202,29 @@ button:hover {
     height: 320px;
     /* Match your fixed height */
 }
+
+.lives-container {
+    position: absolute; /* Allows you to position it independently of other content */
+    top: 10px;  /* Adjust this value to move the hearts down/up */
+    left: 10px;  /* Adjust this value to move the hearts left/right */
+    z-index: 10; /* Ensure it's above other elements */
+    display: flex; /* Align hearts in a row */
+  }
+  
+  .heart-icon {
+    font-size: 24px; /* Adjust size as needed */
+    margin-right: 5px; /* Space between hearts */
+  }
+  
+  .full-heart {
+    color: red;
+  }
+  
+  .empty-heart {
+    color: grey;
+  }
+  
+   
 
 /* Fade In Animation */
 @keyframes fadeIn {

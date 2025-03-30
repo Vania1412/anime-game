@@ -7,9 +7,11 @@ function StartScreen({ setGameState }) {
   const navigate = useNavigate();
   const [isDeathMode, setIsDeathMode] = useState(false);
   const [maxReplays, setMaxReplays] = useState(2);
+  const [totalLife, setTotalLife] = useState(1);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [tempMaxReplays, setTempMaxReplays] = useState(maxReplays);
-
+  const [tempTotalLife, setTempTotalLife] = useState(totalLife); 
+  const [isMultiTrackMode, setIsMultiTrackMode] = useState(false);
 
   // Load Death Mode state from localStorage on mount
   useEffect(() => {
@@ -35,7 +37,12 @@ function StartScreen({ setGameState }) {
       const response = await fetch('http://localhost:5000/start_game', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ difficulty, question_count: questionCount, death_mode: isDeathMode }),
+        body: JSON.stringify({ 
+          difficulty, 
+          question_count: questionCount, 
+          death_mode: isDeathMode, 
+          multi_track_mode: isMultiTrackMode 
+        }),
       });
 
       const data = await response.json();
@@ -48,8 +55,10 @@ function StartScreen({ setGameState }) {
           score: 0,
           totalQuestions: data.questions.length,
           death_mode: isDeathMode,
+          multi_track_mode: isMultiTrackMode,
           currentDeadModeQuestion: 0,
           maxReplays,
+          maxLives: parseInt(totalLife, 10) ,
         };
 
         setGameState(newGameState);
@@ -57,6 +66,7 @@ function StartScreen({ setGameState }) {
         localStorage.removeItem(`replayCount_${0}`);
         console.log(localStorage.getItem('isDeathMode'));
         localStorage.setItem(`isAnswered_${0}`, false);
+        localStorage.setItem(`totalLife`, totalLife);
 
         navigate('/question');
       } else {
@@ -87,7 +97,7 @@ function StartScreen({ setGameState }) {
             <option value="5">5 Seconds</option>
           </select>
           <br></br>
-          
+
           <div className="row"></div>
 
           {!isDeathMode && (
@@ -104,7 +114,7 @@ function StartScreen({ setGameState }) {
               />
               <br></br>
             </>
-            
+
           )}
 
           <div className="toggle-container" onClick={handleToggle}>
@@ -113,49 +123,63 @@ function StartScreen({ setGameState }) {
             </div>
             <span>{isDeathMode ? 'Death Mode' : 'Normal Mode'}</span>
           </div>
+ 
 
+          
           <div className="row"></div>
-
           <button type="submit" id="startGameBtn">Start Game</button>
         </form>
         <div id="errorMessage" style={{ color: 'red', display: 'none' }}>
           <p>Error starting the game!</p>
         </div>
         <button id="settingsBtn" onClick={() => openSettings(true)}>⚙ Settings</button>
-         
+
 
         {isSettingsOpen && (
-  <div className="modal-overlay">
-    <div className="modal">
-      <h2>Game Settings</h2>
-      <label htmlFor="maxReplays">Max Replays: </label>
-      <select
-  id="maxReplays"
-  value={tempMaxReplays}
-  onChange={(e) => setTempMaxReplays(e.target.value)}
-  className="small-select" // Apply class here
->
-  <option value="0">0</option>
-  <option value="1">1</option>
-  <option value="2">2</option>
-  <option value="3">3</option>
-  <option value="-1">Infinity</option>
-</select>
+          <div className="modal-overlay">
+            <div className="modal">
+              <h2>Game Settings</h2>
+              <label htmlFor="maxReplays">Max Replays: </label>
+              <select
+                id="maxReplays"
+                value={tempMaxReplays}
+                onChange={(e) => setTempMaxReplays(e.target.value)}
+                className="small-select" // Apply class here
+              >
+                <option value="0">0</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="-1">Infinity</option>
+              </select>
+              {isDeathMode && <div>
+              <label htmlFor="totalLife">Number of Lives: </label>
+              <select
+                id="totalLife"
+                value={tempTotalLife}
+                onChange={(e) => setTempTotalLife(e.target.value)}
+                className="small-select" // Apply class here
+              >
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+              </select>
+              </div>}
+              <br />
+              <div className="modal-buttons">
+                <button onClick={() => setIsSettingsOpen(false)}>Close</button>
+                <button onClick={() => {
+                  setMaxReplays(tempMaxReplays);
+                  setTotalLife(tempTotalLife); 
+                  setIsSettingsOpen(false);
+                }}>
+                  Save
+                </button>
 
-      <br />
-      <div className="modal-buttons">
-        <button onClick={() => setIsSettingsOpen(false)}>Close</button>
-        <button onClick={() => { 
-          setMaxReplays(tempMaxReplays); 
-          setIsSettingsOpen(false); 
-        }}>
-          Save
-        </button>
-        
-      </div>
-    </div>
-  </div>
-)}
+              </div>
+            </div>
+          </div>
+        )}
 
       </div>
     </div>

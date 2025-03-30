@@ -56,13 +56,34 @@ def start_game():
         difficulty = int(data.get("difficulty", 3))
  
         is_death_mode = data.get("death_mode", False)
+        
+        is_multi_track_mode = data.get("multi_track_mode", False)  # New flag for Multi-Track Mode
 
-        if is_death_mode:
-            # Generate the first 10 questions for Death Mode
-            questions = [get_random_song_clip(difficulty) for _ in range(5)]
+        # If Multi-Track Mode is enabled
+        if is_multi_track_mode:
+            if is_death_mode:
+                # In Death Mode with Multi-Track: Generate two songs for each question
+                questions = [
+                    [get_random_song_clip(difficulty), get_random_song_clip(difficulty)] 
+                    for _ in range(5)  # You can change the number of questions
+                ]
+            else:
+                # In Normal Mode with Multi-Track: Generate two songs for each question
+                question_count = int(data.get("question_count", 5))
+                questions = [
+                    [get_random_song_clip(difficulty), get_random_song_clip(difficulty)] 
+                    for _ in range(question_count)
+                ]
         else:
-            question_count = int(data.get("question_count", 5))
-            questions = [get_random_song_clip(difficulty) for _ in range(question_count)]
+            # If Multi-Track Mode is not enabled, handle as normal or death mode
+            if is_death_mode:
+                # Generate one random song for each question in Death Mode
+                questions = [get_random_song_clip(difficulty) for _ in range(5)]
+            else:
+                # Generate one random song for each question in Normal Mode
+                question_count = int(data.get("question_count", 5))
+                questions = [get_random_song_clip(difficulty) for _ in range(question_count)]
+
 
         return jsonify({
             "questions": questions,

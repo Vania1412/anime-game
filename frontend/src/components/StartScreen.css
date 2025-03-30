@@ -148,6 +148,28 @@ button:hover {
   left: 25px;
 }
 
+.toggle-slider-multi {
+  width: 50px;
+  height: 25px;
+  border-radius: 20px;
+  background-color: #ccc;
+  position: relative;
+  transition: background-color 0.3s ease;
+  margin-right: 10px;
+}
+
+.toggle-slider-multi.on {
+  background-color: #0ba22c;
+}
+
+.toggle-slider-multi.off {
+  background-color: #888;
+}
+
+.toggle-slider-multi.on .toggle-circle {
+  left: 25px;
+}
+
 /* Modal Background */
 .modal-overlay {
   position: fixed;
