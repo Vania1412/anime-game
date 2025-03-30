@@ -123,7 +123,16 @@ function StartScreen({ setGameState }) {
             </div>
             <span>{isDeathMode ? 'Death Mode' : 'Normal Mode'}</span>
           </div>
+
+          <div className="toggle-container" onClick={() => setIsMultiTrackMode(!isMultiTrackMode)}>
+            <div className={`toggle-slider-multi ${isMultiTrackMode ? 'on' : 'off'}`}>
+              <div className="toggle-circle"></div>
+            </div>
+            <span>{isMultiTrackMode ? 'Multi-Track Mode' : 'Single Track Mode'}</span>
+          </div>
+
  
+        
 
           
           <div className="row"></div>

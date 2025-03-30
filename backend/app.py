@@ -106,11 +106,15 @@ def next_question():
 
         difficulty = int(data["difficulty"])
         is_death_mode = data.get("is_death_mode", False)
+        is_multi_track_mode = data.get("multi_track_mode", False)  # New flag for Multi-Track Mode
 
         if is_death_mode:
-            # Generate the next batch of 10 questions
-            questions = [get_random_song_clip(difficulty) for _ in range(5)]
-            return jsonify({"questions": questions})
+            if is_multi_track_mode:
+                questions = [[get_random_song_clip(difficulty), get_random_song_clip(difficulty)] for _ in range(5)]
+                return jsonify({"questions": questions})
+            else:
+                questions = [get_random_song_clip(difficulty) for _ in range(5)]
+                return jsonify({"questions": questions})
 
         return jsonify({"error": "This endpoint is only for Death Mode"}), 400
     except Exception as e:

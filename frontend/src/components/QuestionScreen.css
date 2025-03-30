@@ -193,15 +193,7 @@ button:hover {
     /* Center iframe vertically within content */
 }
 
-/* Ensure iframe doesn’t stretch the content div */
-.youtube-content iframe {
-    max-width: 100%;
-    /* Responsive */
-    width: 560px;
-    /* Match your fixed width */
-    height: 320px;
-    /* Match your fixed height */
-}
+ 
 
 .lives-container {
     position: absolute; /* Allows you to position it independently of other content */
