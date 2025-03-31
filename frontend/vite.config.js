@@ -3,8 +3,6 @@ import react from '@vitejs/plugin-react'
 
 // https://vite.dev/config/
 export default defineConfig({
-  build: {
-    outDir: 'dist',
-    sourcemap: true
-  }
-});
+  plugins: [react()],
+  base: '/anime-game/'  // Replace with your repo name
+})

@@ -34,7 +34,7 @@ function StartScreen({ setGameState }) {
     const questionCount = isDeathMode ? 5 : parseInt(event.target.question_count.value, 10);
 
     try {
-      const response = await fetch('http://localhost:5000/start_game', {
+      const response = await fetch('https://anime-game-tgme.onrender.com/start_game', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
