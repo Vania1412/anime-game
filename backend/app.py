@@ -126,12 +126,9 @@ def next_question():
 # SERVE REACT FRONTEND
 # =========================
 @app.route('/')
-def serve_react():
-    return send_from_directory(app.static_folder, 'index.html')
-
-@app.route('/<path:path>')
-def serve_static_files(path):
-    return send_from_directory(app.static_folder, path)
+def home():
+    """API root endpoint."""
+    return jsonify({"message": "Anime Game Backend API. Use /start_game or /next_question."})
 
 # =========================
 # RUN FLASK SERVER
