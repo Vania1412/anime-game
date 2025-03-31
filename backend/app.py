@@ -7,8 +7,8 @@ from pytubefix.cli import on_progress
 from youtube_clips import YOUTUBE_CLIPS 
 
 
-app = Flask(__name__, static_folder='dist', static_url_path='/')
-CORS(app)  # Enable CORS for React frontend
+app = Flask(__name__)
+CORS(app, resources={r"/*": {"origins": "*"}})   # Enable CORS for React frontend
 
 
 # Set to track used URLs
