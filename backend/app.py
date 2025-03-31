@@ -24,7 +24,7 @@ def get_random_song_clip(difficulty):
         url = random.choice(list(YOUTUBE_CLIPS.keys()))
 
     try:
-        yt = YouTube(url, on_progress_callback=on_progress)
+        yt = YouTube(url, on_progress_callback=on_progress, use_po_token=True)
         stream = yt.streams.filter(only_audio=True).first()
         
         if not stream:
