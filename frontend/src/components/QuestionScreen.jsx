@@ -21,10 +21,12 @@ function QuestionScreen({ gameState, setGameState }) {
   const navigate = useNavigate();
 
 
-  const { questions, difficulty, currentQuestion, score, totalQuestions, currentDeadModeQuestion, maxReplays, maxLives, multi_track_mode } = gameState;
+  const { questions, difficulty, currentQuestion, score, totalQuestions, currentDeadModeQuestion, maxReplays, maxLives, multi_track_mode, reverse_mode } = gameState;
   const question = questions[currentQuestion] || {};
   const isDeathMode = JSON.parse(localStorage.getItem('isDeathMode') || 'false');
   const isMultiTrackMode = JSON.parse(multi_track_mode || 'false'); // Get Multi-Track Mode
+  const isReverseMode = JSON.parse(reverse_mode || 'false');
+  const [maxReplaysNum, setMaxReplaysNum] = useState(maxReplays);
 
 
   useEffect(() => {
@@ -70,31 +72,61 @@ function QuestionScreen({ gameState, setGameState }) {
     timeEndRef.current.textContent = "  " + formatTime(difficulty);
 
     const audioPlayer = audioRef.current;
-    if (!isMultiTrackMode) {
+    if (!isMultiTrackMode && !isReverseMode) {
       audioPlayer.src = question.url;
-     audioPlayer.currentTime = question.start_time || 0;
- 
-     audioPlayer.onloadedmetadata = () => {
-       audioPlayer.play().catch((error) => console.error("Playback failed:", error));
- 
-       audioPlayer.ontimeupdate = () => {
-         const currentTime = audioPlayer.currentTime;
-         const start = question.start_time || 0;
-         const end = start + difficulty;
- 
-         if (currentTime >= start && currentTime < end) {
-           const newProgress = Math.round(((currentTime - start) / difficulty) * 100);
-           setProgress(newProgress); // Update state instead of ref
-         } else if (currentTime >= end) {
-           setProgress(100); // Update state instead of ref
-           audioPlayer.pause();
-         }
-       };
-     };
- 
-     audioPlayer.onended = () => {
-       setProgress(100); // Update state instead of ref
-     };
+      audioPlayer.currentTime = question.start_time || 0;
+
+      audioPlayer.onloadedmetadata = () => {
+        audioPlayer.play().catch((error) => console.error("Playback failed:", error));
+
+        audioPlayer.ontimeupdate = () => {
+          const currentTime = audioPlayer.currentTime;
+          const start = question.start_time || 0;
+          const end = start + difficulty;
+
+          if (currentTime >= start && currentTime < end) {
+            const newProgress = Math.round(((currentTime - start) / difficulty) * 100);
+            setProgress(newProgress); // Update state instead of ref
+          } else if (currentTime >= end) {
+            setProgress(100); // Update state instead of ref
+            audioPlayer.pause();
+          }
+        };
+      };
+
+      audioPlayer.onended = () => {
+        setProgress(100); // Update state instead of ref
+      };
+    } else if (isReverseMode) {
+      audioPlayer.src = question.url;
+      const start = question.start_time || 0;
+      const end = start + difficulty;
+      let currentTime = end; // Start from the end
+      let interval = null; // Interval reference
+    
+      audioPlayer.onloadedmetadata = () => {
+        audioPlayer.currentTime = end;
+        audioPlayer.play().catch((error) => console.error("Playback failed:", error));
+    
+        // Reverse playback using setInterval
+        interval = setInterval(() => {
+          if (currentTime > start) {
+            currentTime -= 0.1; // Step back by 0.1s (adjust as needed)
+            audioPlayer.currentTime = currentTime;
+            setProgress(Math.round(((end - currentTime) / difficulty) * 100));
+          } else {
+            clearInterval(interval);
+            audioPlayer.currentTime = start;
+            setProgress(100);
+            audioPlayer.pause();
+          }
+        }, 100); // Runs every 100ms (adjustable)
+      };
+    
+      audioPlayer.onended = () => {
+        clearInterval(interval);
+        setProgress(100);
+      };
     } else {
       const audioPlayer2 = audioRef2.current;
 
@@ -229,20 +261,54 @@ function QuestionScreen({ gameState, setGameState }) {
     if (isMultiTrackMode) {
       localStorage.setItem(`answeredContent2_${currentQuestion}`, answer2);
     }
+    setMaxReplaysNum(-1)
   };
 
   const handleReplay = () => {
-    if (replayCount >= maxReplays && maxReplays != -1) return;
+    if (replayCount >= maxReplaysNum && maxReplaysNum != -1) return;
 
-    if (!isMultiTrackMode) {
+    if (!isMultiTrackMode && !isReverseMode) {
       if (audioRef.current) {
         const audioPlayer = audioRef.current;
         audioPlayer.pause();
         audioPlayer.currentTime = question.start_time || 0;
         setProgress(0); // Reset progress state
+        audioPlayer.play().catch((error) => console.error("Replay failed:", error)); 
+      }
+    } else if (isReverseMode) {
+      if (audioRef.current) {
+        const audioPlayer = audioRef.current;
+        audioPlayer.pause();
+    
+        const start = question.start_time || 0;
+        const end = start + difficulty;
+        let currentTime = end; // Restart from the end
+        let interval = null; // Interval reference
+    
+        audioPlayer.currentTime = end;
+        setProgress(0); // Reset progress
+    
         audioPlayer.play().catch((error) => console.error("Replay failed:", error));
-  
-         
+    
+        // Reverse playback simulation
+        interval = setInterval(() => {
+          if (currentTime > start) {
+            currentTime -= 0.1; // Step back by 0.1s (adjustable)
+            audioPlayer.currentTime = currentTime;
+            setProgress(Math.round(((end - currentTime) / difficulty) * 100));
+          } else {
+            clearInterval(interval);
+            audioPlayer.currentTime = start;
+            setProgress(100);
+            audioPlayer.pause();
+          }
+        }, 100); // Runs every 100ms
+    
+        // Stop interval when audio ends
+        audioPlayer.onended = () => {
+          clearInterval(interval);
+          setProgress(100);
+        };
       }
     } else {
       const audioPlayer = audioRef.current;
@@ -300,7 +366,7 @@ function QuestionScreen({ gameState, setGameState }) {
     } else if (isDeathMode) {
       console.log(3);
       try {
-        const response = await fetch("https://anime-game-tgme.onrender.com/next_question", { 
+        const response = await fetch("https://anime-game-tgme.onrender.com/next_question", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ difficulty, is_death_mode: true, multi_track_mode: isMultiTrackMode }),
@@ -337,6 +403,7 @@ function QuestionScreen({ gameState, setGameState }) {
     setIsAnswered(false);
     document.getElementById('next-question-link').style.display = 'none';
     setIsLoadingNext(false);
+    setMaxReplaysNum(maxReplays)
 
     localStorage.removeItem(`replayCount_${currentQuestion + 1}`);
     localStorage.removeItem(`isAnswered_${currentQuestion + 1}`);
@@ -365,14 +432,14 @@ function QuestionScreen({ gameState, setGameState }) {
         />
         <span ref={timeEndRef} id="time-end">  00:00</span>
       </div>
-      {maxReplays !== 0 && (
+      {maxReplaysNum !== 0 && (
         <button
           id="replay-btn"
           onClick={handleReplay}
-          disabled={maxReplays != -1 && replayCount >= maxReplays}
-          style={{ cursor: replayCount >= maxReplays && maxReplays != -1 ? 'not-allowed' : 'pointer' }}
+          disabled={maxReplaysNum != -1 && replayCount >= maxReplaysNum}
+          style={{ cursor: replayCount >= maxReplaysNum && maxReplaysNum != -1 ? 'not-allowed' : 'pointer' }}
         >
-          {maxReplays == -1 ? 'Replay' : `Replay (${maxReplays - replayCount})`}
+          {maxReplaysNum == -1 ? 'Replay' : `Replay (${maxReplaysNum - replayCount})`}
         </button>
       )}
       <br />

@@ -10,8 +10,12 @@ function StartScreen({ setGameState }) {
   const [totalLife, setTotalLife] = useState(1);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [tempMaxReplays, setTempMaxReplays] = useState(maxReplays);
-  const [tempTotalLife, setTempTotalLife] = useState(totalLife); 
+  const [tempTotalLife, setTempTotalLife] = useState(totalLife);
   const [isMultiTrackMode, setIsMultiTrackMode] = useState(false);
+  const [isTempMultiTrackMode, setIsTempMultiTrackMode] = useState(false);
+  const [isReverseMode, setIsReverseMode] = useState(false);
+  const [isTempReverseMode, setIsTempReverseMode] = useState(false);
+
 
   // Load Death Mode state from localStorage on mount
   useEffect(() => {
@@ -37,11 +41,11 @@ function StartScreen({ setGameState }) {
       const response = await fetch('https://anime-game-tgme.onrender.com/start_game', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          difficulty, 
-          question_count: questionCount, 
-          death_mode: isDeathMode, 
-          multi_track_mode: isMultiTrackMode 
+        body: JSON.stringify({
+          difficulty,
+          question_count: questionCount,
+          death_mode: isDeathMode,
+          multi_track_mode: isMultiTrackMode
         }),
       });
 
@@ -56,9 +60,10 @@ function StartScreen({ setGameState }) {
           totalQuestions: data.questions.length,
           death_mode: isDeathMode,
           multi_track_mode: isMultiTrackMode,
+          reverse_mode: isReverseMode, 
           currentDeadModeQuestion: 0,
           maxReplays,
-          maxLives: parseInt(totalLife, 10) ,
+          maxLives: parseInt(totalLife, 10),
         };
 
         setGameState(newGameState);
@@ -81,6 +86,9 @@ function StartScreen({ setGameState }) {
 
   const openSettings = () => {
     setTempMaxReplays(maxReplays); // Reset input to current value
+    setIsTempMultiTrackMode(isMultiTrackMode)
+    setIsTempReverseMode(isReverseMode)
+    setTempTotalLife(totalLife)
     setIsSettingsOpen(true);
   };
 
@@ -124,17 +132,6 @@ function StartScreen({ setGameState }) {
             <span>{isDeathMode ? 'Death Mode' : 'Normal Mode'}</span>
           </div>
 
-          <div className="toggle-container" onClick={() => setIsMultiTrackMode(!isMultiTrackMode)}>
-            <div className={`toggle-slider-multi ${isMultiTrackMode ? 'on' : 'off'}`}>
-              <div className="toggle-circle"></div>
-            </div>
-            <span>{isMultiTrackMode ? 'Multi-Track Mode' : 'Single Track Mode'}</span>
-          </div>
-
- 
-        
-
-          
           <div className="row"></div>
           <button type="submit" id="startGameBtn">Start Game</button>
         </form>
@@ -162,24 +159,40 @@ function StartScreen({ setGameState }) {
                 <option value="-1">Infinity</option>
               </select>
               {isDeathMode && <div>
-              <label htmlFor="totalLife">Number of Lives: </label>
-              <select
-                id="totalLife"
-                value={tempTotalLife}
-                onChange={(e) => setTempTotalLife(e.target.value)}
-                className="small-select" // Apply class here
-              >
-                <option value="1">1</option>
-                <option value="2">2</option>
-                <option value="3">3</option>
-              </select>
+                <label htmlFor="totalLife">Number of Lives: </label>
+                <select
+                  id="totalLife"
+                  value={tempTotalLife}
+                  onChange={(e) => setTempTotalLife(e.target.value)}
+                  className="small-select" // Apply class here
+                >
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                </select>
+              </div>}
+              <div> </div>
+              {!isTempReverseMode && <div className="toggle-container" onClick={() => setIsTempMultiTrackMode(!isTempMultiTrackMode)}>
+                <div className={`toggle-slider-multi ${isTempMultiTrackMode ? 'on' : 'off'}`}>
+                  <div className="toggle-circle"></div>
+                </div>
+                <span>{isTempMultiTrackMode ? 'Multi-Track Mode' : 'Single Track Mode'}</span>
+              </div>}
+              <div> </div>
+              {!isTempMultiTrackMode && <div className="toggle-container" onClick={() => setIsTempReverseMode(!isTempReverseMode)}>
+                <div className={`toggle-slider-multi ${isTempReverseMode ? 'on' : 'off'}`}>
+                  <div className="toggle-circle"></div>
+                </div>
+                <span>{isTempReverseMode ? 'Reverse Mode' : 'Forward Mode'}</span>
               </div>}
               <br />
               <div className="modal-buttons">
                 <button onClick={() => setIsSettingsOpen(false)}>Close</button>
                 <button onClick={() => {
                   setMaxReplays(tempMaxReplays);
-                  setTotalLife(tempTotalLife); 
+                  setTotalLife(tempTotalLife);
+                  setIsMultiTrackMode(isTempMultiTrackMode);
+                  setIsReverseMode(isTempReverseMode);
                   setIsSettingsOpen(false);
                 }}>
                   Save
