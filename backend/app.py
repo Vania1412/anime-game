@@ -1,104 +1,45 @@
+from flask import Flask, request, jsonify, send_from_directory
+from flask_cors import CORS
 import os
 import random
-from flask import Flask, jsonify, request
-from flask_cors import CORS
 from pytubefix import YouTube
 from pytubefix.cli import on_progress
-from youtube_clips import YOUTUBE_CLIPS 
+from youtube_clips import YOUTUBE_CLIPS_2025, PRE_CACHED_CLIPS_2025 
+
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "*"}})
+CORS(app, resources={r"/*": {"origins": "*"}})   # Enable CORS for React frontend
 
-youtube_cache = {}
+
+# Set to track used URLs
 used_urls = set()
 
-def prefetch_clips():
-    """Pre-fetch a subset of clips at startup."""
-    urls_to_prefetch = random.sample(list(YOUTUBE_CLIPS.keys()), min(20, len(YOUTUBE_CLIPS)))
-    for url in urls_to_prefetch:
-        if url not in youtube_cache:
-            try:
-                yt = YouTube(
-                    url,
-                    on_progress_callback=on_progress,
-                    client='WEB'  # No token needed
-                )
-                stream = yt.streams.filter(only_audio=True).first()
-                if not stream:
-                    continue
-                youtube_cache[url] = {
-                    "stream_url": stream.url,
-                    "duration": yt.length,
-                    "youtube_id": yt.video_id
-                }
-            except Exception as e:
-                app.logger.error(f"Pre-fetch error for {url}: {e}")
-
 def get_random_song_clip(difficulty):
-    if len(used_urls) == len(YOUTUBE_CLIPS):
-        used_urls.clear()
+    """Fetch a random song and extract a clip, ensuring no duplicate link."""
+    if len(used_urls) == len(YOUTUBE_CLIPS_2025):
+        used_urls.clear()  # Reset if all links are used
 
-    url = random.choice(list(YOUTUBE_CLIPS.keys()))
+    url = random.choice(list(YOUTUBE_CLIPS_2025.keys()))
     while url in used_urls:
-        url = random.choice(list(YOUTUBE_CLIPS.keys()))
+        url = random.choice(list(YOUTUBE_CLIPS_2025.keys()))
 
-    if url in youtube_cache:
-        cached_data = youtube_cache[url]
+    try: 
+        cached_data = PRE_CACHED_CLIPS_2025[url]
         duration = cached_data["duration"]
         start_time = random.randint(0, min(89 - difficulty, duration - difficulty))
         used_urls.add(url)
+
         return {
             "url": cached_data["stream_url"],
             "start_time": start_time,
-            "correct_answer": YOUTUBE_CLIPS[url],
-            "title": YOUTUBE_CLIPS[url],
+            "correct_answer": YOUTUBE_CLIPS_2025[url],  # Get anime title
+            "title": YOUTUBE_CLIPS_2025[url],
             "youtube_id": cached_data["youtube_id"]
-        }
-
-    try:
-        yt = YouTube(
-            url,
-            on_progress_callback=on_progress,
-            client='WEB'
-        )
-        stream = yt.streams.filter(only_audio=True).first()
-        if not stream:
-            raise ValueError("No audio stream available.")
-
-        duration = yt.length
-        start_time = random.randint(0, min(89 - difficulty, duration - difficulty))
-        used_urls.add(url)
-
-        youtube_cache[url] = {
-            "stream_url": stream.url,
-            "duration": duration,
-            "youtube_id": yt.video_id
-        }
-        return {
-            "url": stream.url,
-            "start_time": start_time,
-            "correct_answer": YOUTUBE_CLIPS[url],
-            "title": YOUTUBE_CLIPS[url],
-            "youtube_id": yt.video_id
         }
     except Exception as e:
         app.logger.error(f"Error fetching YouTube clip: {e}")
-        if youtube_cache:
-            fallback_url = random.choice(list(youtube_cache.keys()))
-            cached_data = youtube_cache[fallback_url]
-            duration = cached_data["duration"]
-            start_time = random.randint(0, min(89 - difficulty, duration - difficulty))
-            used_urls.add(fallback_url)
-            return {
-                "url": cached_data["stream_url"],
-                "start_time": start_time,
-                "correct_answer": YOUTUBE_CLIPS[fallback_url],
-                "title": YOUTUBE_CLIPS[fallback_url],
-                "youtube_id": cached_data["youtube_id"]
-            }
-        return {"error": str(e)} 
+        return {"error": str(e)}
 
- 
 @app.route('/start_game', methods=['POST'])
 def start_game():
     """Start a new game and return questions as JSON."""
@@ -183,8 +124,6 @@ def next_question():
 def home():
     """API root endpoint."""
     return jsonify({"message": "Anime Game Backend API. Use /start_game or /next_question."})
-
-prefetch_clips()
 
 # =========================
 # RUN FLASK SERVER
