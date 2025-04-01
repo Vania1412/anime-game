@@ -15,6 +15,10 @@ function StartScreen({ setGameState }) {
   const [isTempMultiTrackMode, setIsTempMultiTrackMode] = useState(false);
   const [isReverseMode, setIsReverseMode] = useState(false);
   const [isTempReverseMode, setIsTempReverseMode] = useState(false);
+  const [isTimeAttackMode, setIsTimeAttackMode] = useState(false); // New state for Time Attack
+  const [isTempTimeAttackMode, setIsTempTimeAttackMode] = useState(false); // Temp state for settings
+  const [timeLimit, setTimeLimit] = useState(60); // Default 60s
+  const [tempTimeLimit, setTempTimeLimit] = useState(60);
   const [isAnimeListOpen, setIsAnimeListOpen] = useState(false);
   const [animeList, setAnimeList] = useState([]);
   const [selectedAnimes, setSelectedAnimes] = useState({});
@@ -23,18 +27,18 @@ function StartScreen({ setGameState }) {
   // Load Death Mode state from localStorage on mount
   useEffect(() => {
     fetch('https://anime-game-tgme.onrender.com/get_anime_list')
-    .then((response) => response.json())
-    .then((data) => {
-      setAnimeList(data.animes);
-      // Load stored selections or default to all selected
-      const storedSelections = JSON.parse(localStorage.getItem('selectedAnimes')) || {};
-      const defaultSelection = data.animes.reduce((acc, anime) => {
-        acc[anime] = storedSelections[anime] ?? true;
-        return acc;
-      }, {});
-      setSelectedAnimes(defaultSelection);
-    })
-    .catch((error) => console.error('Error fetching anime list:', error));
+      .then((response) => response.json())
+      .then((data) => {
+        setAnimeList(data.animes);
+        // Load stored selections or default to all selected
+        const storedSelections = JSON.parse(localStorage.getItem('selectedAnimes')) || {};
+        const defaultSelection = data.animes.reduce((acc, anime) => {
+          acc[anime] = storedSelections[anime] ?? true;
+          return acc;
+        }, {});
+        setSelectedAnimes(defaultSelection);
+      })
+      .catch((error) => console.error('Error fetching anime list:', error));
     const storedDeathMode = localStorage.getItem('isDeathMode');
     if (storedDeathMode !== null) {
       setIsDeathMode(storedDeathMode === 'true');
@@ -52,13 +56,13 @@ function StartScreen({ setGameState }) {
   const handleToggle = () => {
     const newMode = !isDeathMode;
     setIsDeathMode(newMode);
-    localStorage.setItem('isDeathMode', newMode); // Save to localStorage
+    localStorage.setItem('isDeathMode', newMode); 
   };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     const difficulty = event.target.difficulty.value;
-    const questionCount = isDeathMode ? 5 : parseInt(event.target.question_count.value, 10);
+    const questionCount = (isDeathMode || isTimeAttackMode) ? 5 : parseInt(event.target.question_count.value, 10);
     const selectedAnimeList = Object.keys(selectedAnimes).filter((anime) => selectedAnimes[anime]);
 
     try {
@@ -69,8 +73,9 @@ function StartScreen({ setGameState }) {
           difficulty,
           question_count: questionCount,
           death_mode: isDeathMode,
-          multi_track_mode: isMultiTrackMode, 
-          selected_animes: selectedAnimeList, 
+          multi_track_mode: isMultiTrackMode,
+          time_attack_mode: isTimeAttackMode,
+          selected_animes: selectedAnimeList,
         }),
       });
 
@@ -85,7 +90,9 @@ function StartScreen({ setGameState }) {
           totalQuestions: data.questions.length,
           death_mode: isDeathMode,
           multi_track_mode: isMultiTrackMode,
-          reverse_mode: isReverseMode, 
+          reverse_mode: isReverseMode,
+          time_attack_mode: isTimeAttackMode, // New field
+          time_limit: timeLimit,
           currentDeadModeQuestion: 0,
           maxReplays,
           maxLives: parseInt(totalLife, 10),
@@ -97,6 +104,7 @@ function StartScreen({ setGameState }) {
         console.log(localStorage.getItem('isDeathMode'));
         localStorage.setItem(`isAnswered_${0}`, false);
         localStorage.setItem(`totalLife`, totalLife);
+        localStorage.setItem(`score`, 0);
 
         navigate('/question');
       } else {
@@ -113,6 +121,8 @@ function StartScreen({ setGameState }) {
     setTempMaxReplays(maxReplays); // Reset input to current value
     setIsTempMultiTrackMode(isMultiTrackMode)
     setIsTempReverseMode(isReverseMode)
+    setIsTempTimeAttackMode(isTimeAttackMode); 
+    setTempTimeLimit(timeLimit);
     setTempTotalLife(totalLife)
     setIsSettingsOpen(true);
   };
@@ -133,7 +143,7 @@ function StartScreen({ setGameState }) {
 
           <div className="row"></div>
 
-          {!isDeathMode && (
+          {!isDeathMode && !isTimeAttackMode && (
             <>
               <label htmlFor="question_count">Select Number of Questions:</label>
               <div className="row"></div>
@@ -150,12 +160,12 @@ function StartScreen({ setGameState }) {
 
           )}
 
-          <div className="toggle-container" onClick={handleToggle}>
+          {!isTimeAttackMode && <div className="toggle-container" onClick={handleToggle}>
             <div className={`toggle-slider ${isDeathMode ? 'on' : 'off'}`}>
               <div className="toggle-circle"></div>
             </div>
             <span>{isDeathMode ? 'Death Mode' : 'Normal Mode'}</span>
-          </div>
+          </div>}
 
           <div className="row"></div>
           <button type="submit" id="startGameBtn">Start Game</button>
@@ -171,16 +181,19 @@ function StartScreen({ setGameState }) {
             <div className="modal-anime">
               <h2>Select Animes</h2>
               <div className="anime-list">
-                {animeList.map((anime) => (
-                  <label key={anime} className="anime-item">
-                    <input
-                      type="checkbox"
-                      checked={selectedAnimes[anime] || false}
-                      onChange={() => handleAnimeSelection(anime)}
-                    />
-                    {anime}
-                  </label>
-                ))}
+                {animeList
+                  .slice() // Create a shallow copy to avoid mutating the original array
+                  .sort((a, b) => a.localeCompare(b)) // Sort alphabetically
+                  .map((anime) => (
+                    <label key={anime} className="anime-item">
+                      <input
+                        type="checkbox"
+                        checked={selectedAnimes[anime] || false}
+                        onChange={() => handleAnimeSelection(anime)}
+                      />
+                      {anime}
+                    </label>
+                  ))}
               </div>
               <div className="modal-buttons">
                 <button onClick={() => setIsAnimeListOpen(false)}>Close</button>
@@ -227,15 +240,45 @@ function StartScreen({ setGameState }) {
                 <div className={`toggle-slider-multi ${isTempMultiTrackMode ? 'on' : 'off'}`}>
                   <div className="toggle-circle"></div>
                 </div>
-                <span>{isTempMultiTrackMode ? 'Multi-Track Mode' : 'Single Track Mode'}</span>
+                <span>{isTempMultiTrackMode ? 'Multi-Track Mode ON' : 'Multi-Track Mode OFF'}</span>
               </div>}
               <div> </div>
               {!isTempMultiTrackMode && <div className="toggle-container" onClick={() => setIsTempReverseMode(!isTempReverseMode)}>
                 <div className={`toggle-slider-multi ${isTempReverseMode ? 'on' : 'off'}`}>
                   <div className="toggle-circle"></div>
                 </div>
-                <span>{isTempReverseMode ? 'Reverse Mode' : 'Forward Mode'}</span>
+                <span>{isTempReverseMode ? 'Reverse Mode ON' : 'Reverse Mode OFF'}</span>
               </div>}
+              <div> </div>
+              {!isDeathMode && (
+                <div
+                  className="toggle-container"
+                  onClick={() => setIsTempTimeAttackMode(!isTempTimeAttackMode)}
+                >
+                  <div className={`toggle-slider-multi ${isTempTimeAttackMode ? 'on' : 'off'}`}>
+                    <div className="toggle-circle"></div>
+                  </div>
+                  <span>{isTempTimeAttackMode ? 'Time Attack Mode ON' : 'Time Attack Mode OFF'}</span>
+                </div>
+              )}
+
+              {isTempTimeAttackMode && !isDeathMode && (
+                <div>
+                  <label htmlFor="timeLimit">Time Limit: </label>
+                  <select
+                    id="timeLimit"
+                    value={tempTimeLimit}
+                    onChange={(e) => setTempTimeLimit(parseInt(e.target.value, 10))}
+                    className="small-select"
+                  >
+                    <option value="30">30 Seconds</option>
+                    <option value="45">45 Seconds</option>
+                    <option value="60">60 Seconds</option>
+                    <option value="90">90 Seconds</option>
+                    <option value="180">180 Seconds</option>
+                  </select>
+                </div>
+              )}
               <br />
               <div className="modal-buttons">
                 <button onClick={() => setIsSettingsOpen(false)}>Close</button>
@@ -244,6 +287,8 @@ function StartScreen({ setGameState }) {
                   setTotalLife(tempTotalLife);
                   setIsMultiTrackMode(isTempMultiTrackMode);
                   setIsReverseMode(isTempReverseMode);
+                  setIsTimeAttackMode(isTempTimeAttackMode);  
+                    setTimeLimit(tempTimeLimit);
                   setIsSettingsOpen(false);
                 }}>
                   Save

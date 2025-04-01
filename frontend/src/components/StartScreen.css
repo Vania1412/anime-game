@@ -110,7 +110,7 @@ button:hover {
 .toggle-container {
   display: flex;
   align-items: center;
-  justify-content: center;  
+  justify-content: left;  
   margin-bottom: 10px;
 }
 .toggle-slider, .toggle-slider-multi {
@@ -183,7 +183,7 @@ span {
   background: white;
   padding: 20px;
   border-radius: 10px;
-  text-align: center;
+  text-align: left;
   width: 400px;
 }
 
@@ -197,7 +197,7 @@ span {
 }
 
 .small-select {
-  width: 120px; /* Adjust the width as needed */
+  width: 135px; /* Adjust the width as needed */
 }
 
 
@@ -277,6 +277,7 @@ span {
   .game-container {
     width: 95%;
     padding: 20px;
+
   }
 
   input[type="number"], select, button {

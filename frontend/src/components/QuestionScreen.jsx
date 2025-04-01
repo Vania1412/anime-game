@@ -11,107 +11,81 @@ function QuestionScreen({ gameState, setGameState }) {
   const [showYouTube, setShowYouTube] = useState(false);
   const [isLoadingNext, setIsLoadingNext] = useState(false);
   const [randomStart, setRandomStart] = useState(0);
-  const [progress, setProgress] = useState(0); // New state for progress
+  const [progress, setProgress] = useState(0);
   const [isAnswered, setIsAnswered] = useState(false);
   const [remainingLife, setRemainingLife] = useState(0);
+  const [timeLeft, setTimeLeft] = useState(0);
+  const [score, setScore] = useState(() => {
+    const storedScore = localStorage.getItem('score');
+    return storedScore !== null ? parseInt(storedScore, 10) : (gameState.score || 0);
+  });
   const audioRef = useRef(null);
   const audioRef2 = useRef(null);
   const timeStartRef = useRef(null);
   const timeEndRef = useRef(null);
   const navigate = useNavigate();
 
+  const {
+    questions,
+    difficulty,
+    currentQuestion,
+    totalQuestions,
+    currentDeadModeQuestion,
+    maxReplays,
+    maxLives,
+    multi_track_mode,
+    reverse_mode,
+    time_attack_mode,
+    time_limit,
+  } = gameState;
 
-  const { questions, difficulty, currentQuestion, score, totalQuestions, currentDeadModeQuestion, maxReplays, maxLives, multi_track_mode, reverse_mode } = gameState;
   const question = questions[currentQuestion] || {};
   const isDeathMode = JSON.parse(localStorage.getItem('isDeathMode') || 'false');
-  const isMultiTrackMode = JSON.parse(multi_track_mode || 'false'); // Get Multi-Track Mode
+  const isMultiTrackMode = JSON.parse(multi_track_mode || 'false');
   const isReverseMode = JSON.parse(reverse_mode || 'false');
+  const isTimeAttackMode = JSON.parse(time_attack_mode || 'false');
+  const timeLimit = parseInt(time_limit, 10);
   const [maxReplaysNum, setMaxReplaysNum] = useState(maxReplays);
 
-
-  useEffect(() => {
-    console.log("multi: ", isMultiTrackMode)
-    console.log("question", question)
-    if (!isMultiTrackMode && !question.url || isMultiTrackMode && !question[0].url && !question[1].url) return;
-
-    const storedReplayCount = localStorage.getItem(`replayCount_${currentQuestion}`);
-    setReplayCount(storedReplayCount !== null ? parseInt(storedReplayCount, 10) : 0);
-
-    const answeredState = localStorage.getItem(`isAnswered_${currentQuestion}`);
-    setIsAnswered(answeredState === "true");
-
-    const answeredContent = localStorage.getItem(`answeredContent_${currentQuestion}`);
-    setAnswer(answeredContent !== null ? answeredContent : '');
-
-    const answeredContent2 = localStorage.getItem(`answeredContent2_${currentQuestion}`);
-    setAnswer2(answeredContent2 !== null ? answeredContent2 : '');
-
-    const remainLife = localStorage.getItem(`totalLife`)
-    setRemainingLife(remainLife !== null ? parseInt(remainLife, 10) : maxLives);
-
-
-    if (answeredContent !== null && !isMultiTrackMode) {
-      const correctAnswer = question.correct_answer;
-      if (answeredContent.trim() === correctAnswer) {
-        setFeedback('Correct!');
-      } else {
-        setFeedback(`Incorrect! The correct answer is: ${correctAnswer}`);
-      }
-    } else if (answeredContent !== null && answeredContent2 !== null && isMultiTrackMode) {
-      const correctAnswer1 = question[0].correct_answer; // Assume second correct answer exists
-      const correctAnswer2 = question[1].correct_answer;
-
-      if (answeredContent.trim() === correctAnswer1 && answeredContent2.trim() === correctAnswer2 || answeredContent.trim() === correctAnswer2 && answeredContent2.trim() === correctAnswer1) {
-        setFeedback('Correct!');
-      } else {
-        setFeedback(`Incorrect! The correct answers are: ${correctAnswer1} and ${correctAnswer2}`);
-      }
-
-    }
-
-    timeEndRef.current.textContent = "  " + formatTime(difficulty);
-
+  // Function to play audio (shared between initial and replay)
+  const playAudio = (forceReplay = false) => {
     const audioPlayer = audioRef.current;
+    const hasPlayed = localStorage.getItem(`audioPlayed_${currentQuestion}`) === "true";
+
+    if (!forceReplay && hasPlayed) return; // Skip if not replaying and already played
+
     if (!isMultiTrackMode && !isReverseMode) {
       audioPlayer.src = question.url;
       audioPlayer.currentTime = question.start_time || 0;
-
       audioPlayer.onloadedmetadata = () => {
         audioPlayer.play().catch((error) => console.error("Playback failed:", error));
-
+        if (!forceReplay) localStorage.setItem(`audioPlayed_${currentQuestion}`, "true");
         audioPlayer.ontimeupdate = () => {
           const currentTime = audioPlayer.currentTime;
           const start = question.start_time || 0;
           const end = start + difficulty;
-
           if (currentTime >= start && currentTime < end) {
-            const newProgress = Math.round(((currentTime - start) / difficulty) * 100);
-            setProgress(newProgress); // Update state instead of ref
+            setProgress(Math.round(((currentTime - start) / difficulty) * 100));
           } else if (currentTime >= end) {
-            setProgress(100); // Update state instead of ref
+            setProgress(100);
             audioPlayer.pause();
           }
         };
-      };
-
-      audioPlayer.onended = () => {
-        setProgress(100); // Update state instead of ref
       };
     } else if (isReverseMode) {
       audioPlayer.src = question.url;
       const start = question.start_time || 0;
       const end = start + difficulty;
-      let currentTime = end; // Start from the end
-      let interval = null; // Interval reference
-    
+      let currentTime = end;
+      let interval = null;
+
       audioPlayer.onloadedmetadata = () => {
         audioPlayer.currentTime = end;
         audioPlayer.play().catch((error) => console.error("Playback failed:", error));
-    
-        // Reverse playback using setInterval
+        if (!forceReplay) localStorage.setItem(`audioPlayed_${currentQuestion}`, "true");
         interval = setInterval(() => {
           if (currentTime > start) {
-            currentTime -= 0.1; // Step back by 0.1s (adjust as needed)
+            currentTime -= 0.1;
             audioPlayer.currentTime = currentTime;
             setProgress(Math.round(((end - currentTime) / difficulty) * 100));
           } else {
@@ -120,56 +94,44 @@ function QuestionScreen({ gameState, setGameState }) {
             setProgress(100);
             audioPlayer.pause();
           }
-        }, 100); // Runs every 100ms (adjustable)
+        }, 100);
       };
-    
+
       audioPlayer.onended = () => {
         clearInterval(interval);
         setProgress(100);
       };
-    } else {
+    } else if (isMultiTrackMode) {
       const audioPlayer2 = audioRef2.current;
-
-      // Set sources and preload
       audioPlayer.src = question[0].url;
       audioPlayer2.src = question[1].url;
-      audioPlayer.preload = 'auto'; // Encourage preloading
+      audioPlayer.preload = 'auto';
       audioPlayer2.preload = 'auto';
-
       audioPlayer.currentTime = question[0].start_time || 0;
       audioPlayer2.currentTime = question[1].start_time || 0;
 
-      // Function to check if audio is buffered enough to play
-      const isBuffered = (player) => {
-        return new Promise((resolve) => {
-          if (player.readyState >= 2) { // HAVE_CURRENT_DATA or higher
-            resolve();
-          } else {
-            player.oncanplay = () => resolve();
-          }
-        });
-      };
+      const isBuffered = (player) => new Promise((resolve) => {
+        if (player.readyState >= 2) resolve();
+        else player.oncanplay = () => resolve();
+      });
 
-      // Wait for both to be playable
       const startPlayback = async () => {
         try {
           await Promise.all([isBuffered(audioPlayer), isBuffered(audioPlayer2)]);
           audioPlayer.play().catch((error) => console.error("Audio 1 Playback failed:", error));
           audioPlayer2.play().catch((error) => console.error("Audio 2 Playback failed:", error));
+          if (!forceReplay) localStorage.setItem(`audioPlayed_${currentQuestion}`, "true");
         } catch (error) {
           console.error("Error starting playback:", error);
         }
       };
 
-      // Use audioPlayer as the controlling track for progress
       audioPlayer.ontimeupdate = () => {
         const currentTime = audioPlayer.currentTime;
         const start = question[0].start_time || 0;
         const end = start + difficulty;
-
         if (currentTime >= start && currentTime < end) {
-          const newProgress = Math.min(100, Math.round(((currentTime - start) / (end - start)) * 100));
-          setProgress(newProgress);
+          setProgress(Math.min(100, Math.round(((currentTime - start) / (end - start)) * 100)));
         } else if (currentTime >= end) {
           setProgress(100);
           audioPlayer.pause();
@@ -177,7 +139,6 @@ function QuestionScreen({ gameState, setGameState }) {
         }
       };
 
-      // audioPlayer2 only syncs end time
       audioPlayer2.ontimeupdate = () => {
         const currentTime = audioPlayer2.currentTime;
         const start = question[1].start_time || 0;
@@ -199,17 +160,86 @@ function QuestionScreen({ gameState, setGameState }) {
         audioPlayer.pause();
       };
 
-      // Start playback (ideally after user interaction, see below)
       startPlayback();
     }
+  };
 
-    if (timeStartRef.current) {
-      timeStartRef.current.textContent = '00:00  ';
+  // Initial setup and state sync
+  useEffect(() => {
+    console.log("multi: ", isMultiTrackMode);
+    console.log("question", question);
+    if (!isMultiTrackMode && !question.url || (isMultiTrackMode && (!question[0]?.url || !question[1]?.url))) return;
+
+    const storedReplayCount = localStorage.getItem(`replayCount_${currentQuestion}`);
+    setReplayCount(storedReplayCount !== null ? parseInt(storedReplayCount, 10) : 0);
+
+    setMaxReplaysNum(parseInt(localStorage.getItem('maxReplays'), 10));
+
+    const answeredState = localStorage.getItem(`isAnswered_${currentQuestion}`);
+    setIsAnswered(answeredState === "true");
+
+    const answeredContent = localStorage.getItem(`answeredContent_${currentQuestion}`);
+    setAnswer(answeredContent !== null ? answeredContent : '');
+
+    const answeredContent2 = localStorage.getItem(`answeredContent2_${currentQuestion}`);
+    setAnswer2(answeredContent2 !== null ? answeredContent2 : '');
+
+    const storedScore = localStorage.getItem('score');
+    if (storedScore !== null) {
+      setScore(parseInt(storedScore, 10));
+    } else if (gameState.score !== undefined) {
+      setScore(gameState.score);
+      localStorage.setItem('score', gameState.score);
     }
 
-    const randomStartTime = Math.floor(Math.random() * 90);
-    setRandomStart(randomStartTime);
-  }, [currentQuestion, question.url, question.start_time, difficulty]);
+    if (isTimeAttackMode && timeLeft === 0) {
+      setTimeLeft(timeLimit);
+      setScore(gameState.score || 0);
+    } else if (!isTimeAttackMode) {
+      setRemainingLife(localStorage.getItem('totalLife') !== null ? parseInt(localStorage.getItem('totalLife'), 10) : maxLives);
+    }
+
+    if (answeredContent !== null && !isMultiTrackMode) {
+      const correctAnswer = question.correct_answer;
+      setFeedback(answeredContent.trim() === correctAnswer ? 'Correct!' : `Incorrect! The correct answer is: ${correctAnswer}`);
+    } else if (answeredContent !== null && answeredContent2 !== null && isMultiTrackMode) {
+      const correctAnswer1 = question[0].correct_answer;
+      const correctAnswer2 = question[1].correct_answer;
+      setFeedback(
+        (answeredContent.trim() === correctAnswer1 && answeredContent2.trim() === correctAnswer2) ||
+        (answeredContent.trim() === correctAnswer2 && answeredContent2.trim() === correctAnswer1)
+          ? 'Correct!'
+          : `Incorrect! The correct answers are: ${correctAnswer1} and ${correctAnswer2}`
+      );
+    }
+
+    timeEndRef.current.textContent = "  " + formatTime(difficulty);
+    if (timeStartRef.current) timeStartRef.current.textContent = '00:00  ';
+    setRandomStart(Math.floor(Math.random() * 90));
+
+    // Play audio initially
+    playAudio();
+
+     
+  }, [currentQuestion, question.url, question.start_time, difficulty, isMultiTrackMode, isReverseMode, isTimeAttackMode, timeLimit, maxLives]);
+
+  // Time Attack countdown
+  useEffect(() => {
+    if (isTimeAttackMode && timeLeft > 0) {
+      const timer = setInterval(() => {
+        setTimeLeft((prev) => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            setFeedback(`Time's up! Final Score: ${score}`);
+            setTimeout(() => navigate('/game_over'), 2000);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [isTimeAttackMode, timeLeft, score, navigate]);
 
   const formatTime = (seconds) => {
     const minutes = Math.floor(seconds / 60);
@@ -217,16 +247,16 @@ function QuestionScreen({ gameState, setGameState }) {
     return `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
   };
 
-
   const handleSubmit = (e) => {
     e.preventDefault();
+    let newScore = score;
     if (!isMultiTrackMode) {
       const userAnswer = answer.trim();
       const correctAnswer = question.correct_answer;
 
       if (userAnswer === correctAnswer) {
         setFeedback('Correct!');
-        setGameState((prev) => ({ ...prev, score: prev.score + 1 }));
+        newScore = isTimeAttackMode ? score + 10 + Math.floor(timeLeft / 10) : score + 1;
       } else {
         setFeedback(`Incorrect! The correct answer is: ${correctAnswer}`);
         if (isDeathMode) {
@@ -241,9 +271,12 @@ function QuestionScreen({ gameState, setGameState }) {
       const correctAnswer1 = question[0].correct_answer;
       const correctAnswer2 = question[1].correct_answer;
 
-      if (userAnswer1 === correctAnswer1 && userAnswer2 === correctAnswer2 || userAnswer1 === correctAnswer2 && userAnswer2 === correctAnswer1) {
+      if (
+        (userAnswer1 === correctAnswer1 && userAnswer2 === correctAnswer2) ||
+        (userAnswer1 === correctAnswer2 && userAnswer2 === correctAnswer1)
+      ) {
         setFeedback('Correct!');
-        setGameState((prev) => ({ ...prev, score: prev.score + 1 }));
+        newScore = isTimeAttackMode ? score + 10 + Math.floor(timeLeft / 10) : score + 1;
       } else {
         setFeedback(`Incorrect! The correct answers are: ${correctAnswer1} and ${correctAnswer2}`);
         if (isDeathMode) {
@@ -254,6 +287,10 @@ function QuestionScreen({ gameState, setGameState }) {
       }
     }
 
+    setScore(newScore);
+    localStorage.setItem('score', newScore);
+    setGameState((prev) => ({ ...prev, score: newScore }));
+
     document.getElementById('next-question-link').style.display = 'inline-block';
     setIsAnswered(true);
     localStorage.setItem(`isAnswered_${currentQuestion}`, "true");
@@ -261,84 +298,21 @@ function QuestionScreen({ gameState, setGameState }) {
     if (isMultiTrackMode) {
       localStorage.setItem(`answeredContent2_${currentQuestion}`, answer2);
     }
-    setMaxReplaysNum(-1)
+    localStorage.setItem('maxReplays', -1);
+    setMaxReplaysNum(-1);
   };
 
   const handleReplay = () => {
-    if (replayCount >= maxReplaysNum && maxReplaysNum != -1) return;
-
-    if (!isMultiTrackMode && !isReverseMode) {
-      if (audioRef.current) {
-        const audioPlayer = audioRef.current;
-        audioPlayer.pause();
-        audioPlayer.currentTime = question.start_time || 0;
-        setProgress(0); // Reset progress state
-        audioPlayer.play().catch((error) => console.error("Replay failed:", error)); 
-      }
-    } else if (isReverseMode) {
-      if (audioRef.current) {
-        const audioPlayer = audioRef.current;
-        audioPlayer.pause();
-    
-        const start = question.start_time || 0;
-        const end = start + difficulty;
-        let currentTime = end; // Restart from the end
-        let interval = null; // Interval reference
-    
-        audioPlayer.currentTime = end;
-        setProgress(0); // Reset progress
-    
-        audioPlayer.play().catch((error) => console.error("Replay failed:", error));
-    
-        // Reverse playback simulation
-        interval = setInterval(() => {
-          if (currentTime > start) {
-            currentTime -= 0.1; // Step back by 0.1s (adjustable)
-            audioPlayer.currentTime = currentTime;
-            setProgress(Math.round(((end - currentTime) / difficulty) * 100));
-          } else {
-            clearInterval(interval);
-            audioPlayer.currentTime = start;
-            setProgress(100);
-            audioPlayer.pause();
-          }
-        }, 100); // Runs every 100ms
-    
-        // Stop interval when audio ends
-        audioPlayer.onended = () => {
-          clearInterval(interval);
-          setProgress(100);
-        };
-      }
-    } else {
-      const audioPlayer = audioRef.current;
-      const audioPlayer2 = audioRef2.current;
-      if (audioPlayer && audioPlayer2) {
-        audioPlayer.pause();
-        audioPlayer2.pause();
-        audioPlayer.currentTime = question[0].start_time || 0;
-        audioPlayer2.currentTime = question[1].start_time || 0;
-        setProgress(0);
-
-        const startReplay = async () => {
-          try {
-            await Promise.all([
-              audioPlayer.play().catch((error) => console.error("Audio 1 Replay failed:", error)),
-              audioPlayer2.play().catch((error) => console.error("Audio 2 Replay failed:", error)),
-            ]);
-          } catch (error) {
-            console.error("Replay sync failed:", error);
-          }
-        };
-        startReplay();
-      }
-    }
+    if (replayCount >= maxReplaysNum && maxReplaysNum !== -1) return;
 
     setReplayCount((prev) => {
       const newCount = prev + 1;
       localStorage.setItem(`replayCount_${currentQuestion}`, newCount);
       return newCount;
     });
+
+    setProgress(0); // Reset progress
+    playAudio(true); // Force replay
   };
 
   const handleNext = async () => {
@@ -348,28 +322,29 @@ function QuestionScreen({ gameState, setGameState }) {
     localStorage.removeItem(`answeredContent_${currentQuestion}`);
     localStorage.removeItem(`answeredContent2_${currentQuestion}`);
     localStorage.removeItem(`isAnswered_${currentQuestion}`);
+    localStorage.removeItem(`audioPlayed_${currentQuestion}`); // Reset for next question
 
     if (isDeathMode && remainingLife <= 0) {
-      console.log(1);
       setGameState((prev) => ({
         ...prev,
         currentDeadModeQuestion: prev.currentDeadModeQuestion + 1,
       }));
       navigate("/game_over");
     } else if (currentQuestion + 1 < questions.length) {
-      console.log(2);
       setGameState((prev) => ({
         ...prev,
         currentQuestion: prev.currentQuestion + 1,
         currentDeadModeQuestion: prev.currentDeadModeQuestion + 1,
       }));
-    } else if (isDeathMode) {
-      console.log(3);
+    } else if (isDeathMode || (isTimeAttackMode && timeLeft > 0)) {
       try {
         const response = await fetch("https://anime-game-tgme.onrender.com/next_question", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ difficulty, is_death_mode: true, multi_track_mode: isMultiTrackMode }),
+          body: JSON.stringify({
+            difficulty,
+            multi_track_mode: isMultiTrackMode, 
+          }),
         });
 
         if (!response.ok) throw new Error("Failed to fetch new questions");
@@ -392,7 +367,6 @@ function QuestionScreen({ gameState, setGameState }) {
         navigate("/game_over");
       }
     } else {
-      console.log(4);
       navigate("/game_over");
     }
 
@@ -403,21 +377,28 @@ function QuestionScreen({ gameState, setGameState }) {
     setIsAnswered(false);
     document.getElementById('next-question-link').style.display = 'none';
     setIsLoadingNext(false);
-    setMaxReplaysNum(maxReplays)
+    setMaxReplaysNum(maxReplays);
 
     localStorage.removeItem(`replayCount_${currentQuestion + 1}`);
     localStorage.removeItem(`isAnswered_${currentQuestion + 1}`);
     localStorage.removeItem(`answeredContent_${currentQuestion + 1}`);
     localStorage.removeItem(`answeredContent2_${currentQuestion + 1}`);
+    localStorage.setItem(`maxReplays`, maxReplays);
   };
 
   const closeYouTubeModal = () => {
     setShowYouTube(false);
   };
-
+ 
   return (
     <div>
       <h1>Question #{currentDeadModeQuestion + 1}</h1>
+      {isTimeAttackMode && (
+        <div className="time-attack-info">
+          <span>Time Left: {formatTime(timeLeft)}</span>
+          <span> | Score: {score}</span>
+        </div>
+      )}
       <div id="audio-container">
         <audio ref={audioRef} style={{ display: 'none' }} />
         {isMultiTrackMode && <audio ref={audioRef2} style={{ display: 'none' }} />}

@@ -5,7 +5,7 @@ import './GameOverScreen.css';
 const GameOverScreen = ({ gameState, setGameState }) => {
   const [percentage, setPercentage] = useState('0.00');
   const navigate = useNavigate();
-  const { score, totalQuestions, currentDeadModeQuestion } = gameState;
+  const { score, totalQuestions, time_attack_mode, } = gameState;
 
   const isDeathMode = JSON.parse(localStorage.getItem('isDeathMode') || 'false');
   console.log(isDeathMode)
@@ -37,7 +37,12 @@ const GameOverScreen = ({ gameState, setGameState }) => {
       {isDeathMode ? (
         <div>
           <p>You were defeated.</p>
-          <p className="final-score">After answering {score} question{score <= 1 ? '': 's'} correctly</p>
+          <p className="final-score">After answering {score} question{score <= 1 ? '' : 's'} correctly</p>
+        </div>
+      ) : time_attack_mode ? (
+        <div>
+          <p>Your final score is:</p>
+          <p className="final-score">{score}</p>
         </div>
       ) : (
         <div>
