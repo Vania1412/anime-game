@@ -15,16 +15,39 @@ function StartScreen({ setGameState }) {
   const [isTempMultiTrackMode, setIsTempMultiTrackMode] = useState(false);
   const [isReverseMode, setIsReverseMode] = useState(false);
   const [isTempReverseMode, setIsTempReverseMode] = useState(false);
+  const [isAnimeListOpen, setIsAnimeListOpen] = useState(false);
+  const [animeList, setAnimeList] = useState([]);
+  const [selectedAnimes, setSelectedAnimes] = useState({});
 
 
   // Load Death Mode state from localStorage on mount
   useEffect(() => {
+    fetch('https://anime-game-tgme.onrender.com/get_anime_list')
+    .then((response) => response.json())
+    .then((data) => {
+      setAnimeList(data.animes);
+      // Load stored selections or default to all selected
+      const storedSelections = JSON.parse(localStorage.getItem('selectedAnimes')) || {};
+      const defaultSelection = data.animes.reduce((acc, anime) => {
+        acc[anime] = storedSelections[anime] ?? true;
+        return acc;
+      }, {});
+      setSelectedAnimes(defaultSelection);
+    })
+    .catch((error) => console.error('Error fetching anime list:', error));
     const storedDeathMode = localStorage.getItem('isDeathMode');
     if (storedDeathMode !== null) {
       setIsDeathMode(storedDeathMode === 'true');
       console.log(localStorage.getItem('isDeathMode'));
     }
   }, []);
+
+  const handleAnimeSelection = (anime) => {
+    const updatedSelection = { ...selectedAnimes, [anime]: !selectedAnimes[anime] };
+    setSelectedAnimes(updatedSelection);
+    localStorage.setItem('selectedAnimes', JSON.stringify(updatedSelection));
+  };
+
 
   const handleToggle = () => {
     const newMode = !isDeathMode;
@@ -36,6 +59,7 @@ function StartScreen({ setGameState }) {
     event.preventDefault();
     const difficulty = event.target.difficulty.value;
     const questionCount = isDeathMode ? 5 : parseInt(event.target.question_count.value, 10);
+    const selectedAnimeList = Object.keys(selectedAnimes).filter((anime) => selectedAnimes[anime]);
 
     try {
       const response = await fetch('https://anime-game-tgme.onrender.com/start_game', {
@@ -45,7 +69,8 @@ function StartScreen({ setGameState }) {
           difficulty,
           question_count: questionCount,
           death_mode: isDeathMode,
-          multi_track_mode: isMultiTrackMode
+          multi_track_mode: isMultiTrackMode, 
+          selected_animes: selectedAnimeList, 
         }),
       });
 
@@ -138,6 +163,32 @@ function StartScreen({ setGameState }) {
         <div id="errorMessage" style={{ color: 'red', display: 'none' }}>
           <p>Error starting the game!</p>
         </div>
+
+        <button id="customizeListBtn" onClick={() => setIsAnimeListOpen(true)}>🎵 Customize Question List</button>
+
+        {isAnimeListOpen && (
+          <div className="modal-overlay">
+            <div className="modal-anime">
+              <h2>Select Animes</h2>
+              <div className="anime-list">
+                {animeList.map((anime) => (
+                  <label key={anime} className="anime-item">
+                    <input
+                      type="checkbox"
+                      checked={selectedAnimes[anime] || false}
+                      onChange={() => handleAnimeSelection(anime)}
+                    />
+                    {anime}
+                  </label>
+                ))}
+              </div>
+              <div className="modal-buttons">
+                <button onClick={() => setIsAnimeListOpen(false)}>Close</button>
+              </div>
+            </div>
+          </div>
+        )}
+
         <button id="settingsBtn" onClick={() => openSettings(true)}>⚙ Settings</button>
 
 
