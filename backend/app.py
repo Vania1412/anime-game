@@ -22,7 +22,7 @@ def get_anime_list():
 used_urls = set()
 
 def get_random_song_clip(difficulty):
-    """Fetch a random song and extract a clip, ensuring no duplicate link.""" 
+    """Fetch a random song and extract a clip, ensuring no duplicate link."""
     global selected_animes  # Ensure we use the modified list
 
     filtered_clips = {k: v for k, v in YOUTUBE_CLIPS.items() if v in selected_animes}
@@ -32,9 +32,9 @@ def get_random_song_clip(difficulty):
 
     if len(used_urls) == len(filtered_clips):
         used_urls.clear()  # Reset if all links are used
- 
+
     url = random.choice(list(filtered_clips.keys()))
-    while url in used_urls: 
+    while url in used_urls:
         url = random.choice(list(filtered_clips.keys()))
 
     try: 
@@ -45,7 +45,7 @@ def get_random_song_clip(difficulty):
 
         return {
             "url": cached_data["stream_url"],
-            "start_time": start_time, 
+            "start_time": start_time,
             "correct_answer": filtered_clips[url],  # Get anime title
             "title": filtered_clips[url],
             "youtube_id": cached_data["youtube_id"]
@@ -64,16 +64,18 @@ def start_game():
             return jsonify({"error": "Invalid JSON format"}), 400
 
         difficulty = int(data.get("difficulty", 3))
-
+ 
         is_death_mode = data.get("death_mode", False)
 
+        is_time_attack_mode = data.get("time_attack_mode", False) 
+        
         is_multi_track_mode = data.get("multi_track_mode", False)  # New flag for Multi-Track Mode
 
         selected_animes = set(data["selected_animes"]) 
 
         # If Multi-Track Mode is enabled
         if is_multi_track_mode:
-            if is_death_mode:
+            if is_death_mode or is_time_attack_mode:
                 # In Death Mode with Multi-Track: Generate two songs for each question
                 questions = [
                     [get_random_song_clip(difficulty), get_random_song_clip(difficulty)] 
@@ -88,7 +90,7 @@ def start_game():
                 ]
         else:
             # If Multi-Track Mode is not enabled, handle as normal or death mode
-            if is_death_mode:
+            if is_death_mode or is_time_attack_mode:
                 # Generate one random song for each question in Death Mode
                 questions = [get_random_song_clip(difficulty) for _ in range(5)]
             else:
@@ -106,7 +108,7 @@ def start_game():
     except Exception as e:
         app.logger.error(f"Error in start_game: {e}")
         return jsonify({"error": "Internal server error"}), 500
-
+ 
 @app.route('/next_question', methods=['POST'])
 def next_question():
     """Handles fetching a new question when in Death Mode."""
@@ -116,23 +118,20 @@ def next_question():
         if not data or "difficulty" not in data:
             return jsonify({"error": "Invalid request format"}), 400
 
-        difficulty = int(data["difficulty"])
-        is_death_mode = data.get("is_death_mode", False)
+        difficulty = int(data["difficulty"])  
         is_multi_track_mode = data.get("multi_track_mode", False)  # New flag for Multi-Track Mode
 
-        if is_death_mode:
-            if is_multi_track_mode:
-                questions = [[get_random_song_clip(difficulty), get_random_song_clip(difficulty)] for _ in range(5)]
-                return jsonify({"questions": questions})
-            else:
-                questions = [get_random_song_clip(difficulty) for _ in range(5)]
-                return jsonify({"questions": questions})
-
-        return jsonify({"error": "This endpoint is only for Death Mode"}), 400
+        if is_multi_track_mode:
+            questions = [[get_random_song_clip(difficulty), get_random_song_clip(difficulty)] for _ in range(5)]
+            return jsonify({"questions": questions})
+        else:
+            questions = [get_random_song_clip(difficulty) for _ in range(5)]
+            return jsonify({"questions": questions})
+ 
     except Exception as e:
         app.logger.error(f"Error in next_question: {e}")
         return jsonify({"error": "Internal server error"}), 500
-
+    
 
 # =========================
 # SERVE REACT FRONTEND
