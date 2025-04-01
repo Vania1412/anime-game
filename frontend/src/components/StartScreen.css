@@ -268,3 +268,40 @@ span {
   gap: 10px;
   margin: 5px 0;
 }
+
+@media (max-width: 600px) {
+  h1 {
+    font-size: 2rem;
+  }
+
+  .game-container {
+    width: 95%;
+    padding: 20px;
+  }
+
+  input[type="number"], select, button {
+    width: 100%;
+    font-size: 1rem;
+  }
+
+  .modal {
+    width: 90%;
+    max-width: 350px;
+  }
+
+  .modal-anime {
+    width: 95%;
+    max-width: 350px;
+  }
+
+  #settingsBtn, #customizeListBtn {
+    right: 10px;
+    bottom: 10px;
+    font-size: 12px;
+    padding: 6px 12px;
+  }
+
+  #customizeListBtn {
+    bottom: 50px;
+  }
+}
