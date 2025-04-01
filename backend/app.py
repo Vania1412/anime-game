@@ -207,6 +207,8 @@ def home():
     """API root endpoint."""
     return jsonify({"message": "Anime Game Backend API. Use /start_game or /next_question."})
 
+prefetch_clips()
+
 # =========================
 # RUN FLASK SERVER
 # =========================
