@@ -2,9 +2,9 @@
 from pytubefix import YouTube
 from pytubefix.cli import on_progress
 
-from youtube_clips import YOUTUBE_CLIPS_S 
+from youtube_clips import YOUTUBE_CLIPS 
 
-for url in YOUTUBE_CLIPS_S.keys():
+for url in YOUTUBE_CLIPS.keys():
     try:
         yt = YouTube(url, on_progress_callback=on_progress)
         stream = yt.streams.filter(only_audio=True).first()
