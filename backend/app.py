@@ -9,9 +9,8 @@ from youtube_clips import YOUTUBE_CLIPS
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})   # Enable CORS for React frontend
-
-
-# Set to track used URLs
+ 
+youtube_cache = {}
 used_urls = set()
 
 def get_random_song_clip(difficulty):
@@ -19,32 +18,63 @@ def get_random_song_clip(difficulty):
     if len(used_urls) == len(YOUTUBE_CLIPS):
         used_urls.clear()  # Reset if all links are used
 
+    # Pick a random URL
     url = random.choice(list(YOUTUBE_CLIPS.keys()))
     while url in used_urls:
         url = random.choice(list(YOUTUBE_CLIPS.keys()))
 
+    # Check cache first
+    if url in youtube_cache:
+        cached_data = youtube_cache[url]
+        duration = cached_data["duration"]
+        start_time = random.randint(0, min(89 - difficulty, duration - difficulty))
+        used_urls.add(url)
+        return {
+            "url": cached_data["stream_url"],
+            "start_time": start_time,
+            "correct_answer": YOUTUBE_CLIPS[url],
+            "title": YOUTUBE_CLIPS[url],
+            "youtube_id": cached_data["youtube_id"]
+        }
+
+    # Fetch from YouTube if not cached
     try:
-        yt = YouTube(url, on_progress_callback=on_progress, use_oauth=True, allow_oauth_cache=True)
+        yt = YouTube(
+            url,
+            on_progress_callback=on_progress,
+            use_oauth=False,
+            allow_oauth_cache=True,
+            use_po_token=True,
+            token_file='tokens.json',  # Pre-generated token file
+            client='WEB',  # Mimic browser client
+            user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        )
         stream = yt.streams.filter(only_audio=True).first()
-        
+
         if not stream:
             raise ValueError("No audio stream available.")
-        
+
         duration = yt.length
         start_time = random.randint(0, min(89 - difficulty, duration - difficulty))
         used_urls.add(url)
 
+        # Cache the result
+        youtube_cache[url] = {
+            "stream_url": stream.url,
+            "duration": duration,
+            "youtube_id": yt.video_id
+        }
+
         return {
             "url": stream.url,
             "start_time": start_time,
-            "correct_answer": YOUTUBE_CLIPS[url],  # Get anime title
+            "correct_answer": YOUTUBE_CLIPS[url],
             "title": YOUTUBE_CLIPS[url],
             "youtube_id": yt.video_id
         }
     except Exception as e:
         app.logger.error(f"Error fetching YouTube clip: {e}")
         return {"error": str(e)}
-
 @app.route('/start_game', methods=['POST'])
 def start_game():
     """Start a new game and return questions as JSON."""
