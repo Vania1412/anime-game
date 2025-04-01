@@ -4,7 +4,7 @@ import os
 import random
 from pytubefix import YouTube
 from pytubefix.cli import on_progress
-from youtube_clips import YOUTUBE_CLIPS_2025, PRE_CACHED_CLIPS_2025 
+from youtube_clips import YOUTUBE_CLIP, PRE_CACHED_CLIPS
 
 
 app = Flask(__name__)
@@ -16,15 +16,15 @@ used_urls = set()
 
 def get_random_song_clip(difficulty):
     """Fetch a random song and extract a clip, ensuring no duplicate link."""
-    if len(used_urls) == len(YOUTUBE_CLIPS_2025):
+    if len(used_urls) == len(YOUTUBE_CLIP):
         used_urls.clear()  # Reset if all links are used
 
-    url = random.choice(list(YOUTUBE_CLIPS_2025.keys()))
+    url = random.choice(list(YOUTUBE_CLIP.keys()))
     while url in used_urls:
-        url = random.choice(list(YOUTUBE_CLIPS_2025.keys()))
+        url = random.choice(list(YOUTUBE_CLIP.keys()))
 
     try: 
-        cached_data = PRE_CACHED_CLIPS_2025[url]
+        cached_data = PRE_CACHED_CLIPS[url]
         duration = cached_data["duration"]
         start_time = random.randint(0, min(89 - difficulty, duration - difficulty))
         used_urls.add(url)
@@ -32,8 +32,8 @@ def get_random_song_clip(difficulty):
         return {
             "url": cached_data["stream_url"],
             "start_time": start_time,
-            "correct_answer": YOUTUBE_CLIPS_2025[url],  # Get anime title
-            "title": YOUTUBE_CLIPS_2025[url],
+            "correct_answer": YOUTUBE_CLIP[url],  # Get anime title
+            "title": YOUTUBE_CLIP[url],
             "youtube_id": cached_data["youtube_id"]
         }
     except Exception as e:
