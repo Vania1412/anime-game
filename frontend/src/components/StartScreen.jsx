@@ -105,6 +105,8 @@ function StartScreen({ setGameState }) {
         localStorage.setItem(`isAnswered_${0}`, false);
         localStorage.setItem(`totalLife`, totalLife);
         localStorage.setItem(`score`, 0);
+        localStorage.setItem(`audioPlayed_${0}`, "false")
+        localStorage.setItem('maxReplays', maxReplays)
 
         navigate('/question');
       } else {
@@ -271,6 +273,7 @@ function StartScreen({ setGameState }) {
                     onChange={(e) => setTempTimeLimit(parseInt(e.target.value, 10))}
                     className="small-select"
                   >
+                    <option value="10">10 Seconds</option>
                     <option value="30">30 Seconds</option>
                     <option value="45">45 Seconds</option>
                     <option value="60">60 Seconds</option>
