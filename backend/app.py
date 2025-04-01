@@ -1,8 +1,3 @@
-Collapse
-
-Wrap
-
-Copy
 import os
 import random
 from flask import Flask, jsonify, request
