@@ -66,8 +66,6 @@ def start_game():
         difficulty = int(data.get("difficulty", 3))
  
         is_death_mode = data.get("death_mode", False)
-
-        is_time_attack_mode = data.get("time_attack_mode", False) 
         
         is_multi_track_mode = data.get("multi_track_mode", False)  # New flag for Multi-Track Mode
 
@@ -75,7 +73,7 @@ def start_game():
 
         # If Multi-Track Mode is enabled
         if is_multi_track_mode:
-            if is_death_mode or is_time_attack_mode:
+            if is_death_mode:
                 # In Death Mode with Multi-Track: Generate two songs for each question
                 questions = [
                     [get_random_song_clip(difficulty), get_random_song_clip(difficulty)] 
@@ -118,16 +116,19 @@ def next_question():
         if not data or "difficulty" not in data:
             return jsonify({"error": "Invalid request format"}), 400
 
-        difficulty = int(data["difficulty"])  
+        difficulty = int(data["difficulty"])
+        is_death_mode = data.get("is_death_mode", False)
         is_multi_track_mode = data.get("multi_track_mode", False)  # New flag for Multi-Track Mode
 
-        if is_multi_track_mode:
-            questions = [[get_random_song_clip(difficulty), get_random_song_clip(difficulty)] for _ in range(5)]
-            return jsonify({"questions": questions})
-        else:
-            questions = [get_random_song_clip(difficulty) for _ in range(5)]
-            return jsonify({"questions": questions})
- 
+        if is_death_mode:
+            if is_multi_track_mode:
+                questions = [[get_random_song_clip(difficulty), get_random_song_clip(difficulty)] for _ in range(5)]
+                return jsonify({"questions": questions})
+            else:
+                questions = [get_random_song_clip(difficulty) for _ in range(5)]
+                return jsonify({"questions": questions})
+
+        return jsonify({"error": "This endpoint is only for Death Mode"}), 400
     except Exception as e:
         app.logger.error(f"Error in next_question: {e}")
         return jsonify({"error": "Internal server error"}), 500
