@@ -5,13 +5,46 @@ import random
 from pytubefix import YouTube
 from pytubefix.cli import on_progress
 from youtube_clips import YOUTUBE_CLIPS 
-
+import logging
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "*"}})   # Enable CORS for React frontend
- 
+CORS(app, resources={r"/*": {"origins": "*"}})  # Enable CORS for React frontend
+
+# Set up logging
+app.logger.setLevel(logging.INFO)
+
+# In-memory cache for YouTube data
 youtube_cache = {}
 used_urls = set()
+
+def prefetch_clips():
+    """Pre-fetch all YouTube clips at startup to populate cache."""
+    app.logger.info("Starting YouTube clip pre-fetch...")
+    for url in YOUTUBE_CLIPS.keys():
+        if url not in youtube_cache:
+            try:
+                yt = YouTube(
+                    url,
+                    on_progress_callback=on_progress,
+                    use_oauth=False,
+                    allow_oauth_cache=True,
+                    use_po_token=True,
+                    token_file='tokens.json',
+                    client='WEB'
+                )
+                stream = yt.streams.filter(only_audio=True).first()
+                if not stream:
+                    app.logger.error(f"No audio stream for {url}")
+                    continue
+                youtube_cache[url] = {
+                    "stream_url": stream.url,
+                    "duration": yt.length,
+                    "youtube_id": yt.video_id
+                }
+                app.logger.info(f"Cached {url}")
+            except Exception as e:
+                app.logger.error(f"Pre-fetch error for {url}: {e}")
+    app.logger.info(f"Pre-fetch complete. Cached {len(youtube_cache)} clips.")
 
 def get_random_song_clip(difficulty):
     """Fetch a random song and extract a clip, ensuring no duplicate link."""
@@ -45,11 +78,10 @@ def get_random_song_clip(difficulty):
             use_oauth=False,
             allow_oauth_cache=True,
             use_po_token=True,
-            token_file='tokens.json',  # Pre-generated token file
-            client='WEB'  # Mimic browser client
+            token_file='tokens.json',
+            client='WEB'
         )
         stream = yt.streams.filter(only_audio=True).first()
-
         if not stream:
             raise ValueError("No audio stream available.")
 
@@ -73,7 +105,23 @@ def get_random_song_clip(difficulty):
         }
     except Exception as e:
         app.logger.error(f"Error fetching YouTube clip: {e}")
+        # Fallback to a random cached clip if available
+        if youtube_cache:
+            fallback_url = random.choice(list(youtube_cache.keys()))
+            cached_data = youtube_cache[fallback_url]
+            duration = cached_data["duration"]
+            start_time = random.randint(0, min(89 - difficulty, duration - difficulty))
+            used_urls.add(fallback_url)
+            return {
+                "url": cached_data["stream_url"],
+                "start_time": start_time,
+                "correct_answer": YOUTUBE_CLIPS[fallback_url],
+                "title": YOUTUBE_CLIPS[fallback_url],
+                "youtube_id": cached_data["youtube_id"]
+            }
         return {"error": str(e)}
+
+ 
 @app.route('/start_game', methods=['POST'])
 def start_game():
     """Start a new game and return questions as JSON."""
