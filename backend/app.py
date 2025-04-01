@@ -46,8 +46,7 @@ def get_random_song_clip(difficulty):
             allow_oauth_cache=True,
             use_po_token=True,
             token_file='tokens.json',  # Pre-generated token file
-            client='WEB',  # Mimic browser client
-            user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            client='WEB'  # Mimic browser client
         )
         stream = yt.streams.filter(only_audio=True).first()
 
