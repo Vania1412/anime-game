@@ -10,6 +10,11 @@ from youtube_clips import YOUTUBE_CLIPS, PRE_CACHED_CLIPS
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})   # Enable CORS for React frontend
 
+@app.route('/get_anime_list', methods=['GET'])
+def get_anime_list():
+    """Return a list of available animes for the game."""
+    return jsonify({"animes": list(set(YOUTUBE_CLIPS.values()))}) 
+
 
 # Set to track used URLs
 used_urls = set()
