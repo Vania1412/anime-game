@@ -10,6 +10,8 @@ from youtube_clips import YOUTUBE_CLIPS, PRE_CACHED_CLIPS
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})   # Enable CORS for React frontend
 
+selected_animes = set(YOUTUBE_CLIPS.values())
+
 @app.route('/get_anime_list', methods=['GET'])
 def get_anime_list():
     """Return a list of available animes for the game."""
@@ -21,12 +23,19 @@ used_urls = set()
 
 def get_random_song_clip(difficulty):
     """Fetch a random song and extract a clip, ensuring no duplicate link."""
-    if len(used_urls) == len(YOUTUBE_CLIPS):
+    global selected_animes  # Ensure we use the modified list
+
+    filtered_clips = {k: v for k, v in YOUTUBE_CLIPS.items() if v in selected_animes}
+    
+    if not filtered_clips:  # If the user unselects everything, use all animes
+        filtered_clips = YOUTUBE_CLIPS  
+
+    if len(used_urls) == len(filtered_clips):
         used_urls.clear()  # Reset if all links are used
 
-    url = random.choice(list(YOUTUBE_CLIPS.keys()))
+    url = random.choice(list(filtered_clips.keys()))
     while url in used_urls:
-        url = random.choice(list(YOUTUBE_CLIPS.keys()))
+        url = random.choice(list(filtered_clips.keys()))
 
     try: 
         cached_data = PRE_CACHED_CLIPS[url]
@@ -37,8 +46,8 @@ def get_random_song_clip(difficulty):
         return {
             "url": cached_data["stream_url"],
             "start_time": start_time,
-            "correct_answer": YOUTUBE_CLIPS[url],  # Get anime title
-            "title": YOUTUBE_CLIPS[url],
+            "correct_answer": filtered_clips[url],  # Get anime title
+            "title": filtered_clips[url],
             "youtube_id": cached_data["youtube_id"]
         }
     except Exception as e:
@@ -48,6 +57,7 @@ def get_random_song_clip(difficulty):
 @app.route('/start_game', methods=['POST'])
 def start_game():
     """Start a new game and return questions as JSON."""
+    global selected_animes
     try:
         data = request.get_json()
         if not data:
@@ -58,6 +68,8 @@ def start_game():
         is_death_mode = data.get("death_mode", False)
         
         is_multi_track_mode = data.get("multi_track_mode", False)  # New flag for Multi-Track Mode
+
+        selected_animes = set(data["selected_animes"]) 
 
         # If Multi-Track Mode is enabled
         if is_multi_track_mode:
