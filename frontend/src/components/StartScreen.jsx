@@ -14,6 +14,8 @@ function StartScreen({ setGameState }) {
   const [isMultiTrackMode, setIsMultiTrackMode] = useState(false);
   const [isTempMultiTrackMode, setIsTempMultiTrackMode] = useState(false);
   const [isReverseMode, setIsReverseMode] = useState(false);
+  const [isSpeedMode, setIsSpeedMode] = useState(false);
+  const [isTempSpeedMode, setIsTempSpeedMode] = useState(false);
   const [isTempReverseMode, setIsTempReverseMode] = useState(false);
   const [isTimeAttackMode, setIsTimeAttackMode] = useState(false); // New state for Time Attack
   const [isTempTimeAttackMode, setIsTempTimeAttackMode] = useState(false); 
@@ -23,6 +25,8 @@ function StartScreen({ setGameState }) {
   const [questionTimeLimit, setQuestionTimeLimit] = useState(10);
   const [tempTimeLimit, setTempTimeLimit] = useState(60);
   const [tempQuestionTimeLimit, setTempQuestionTimeLimit] = useState(10);
+  const [playbackSpeed, setPlaybackSpeed] = useState(2);
+  const [tempPlaybackSpeed, setTempPlaybackSpeed] = useState(10);
   const [isAnimeListOpen, setIsAnimeListOpen] = useState(false);
   const [animeList, setAnimeList] = useState([]);
   const [selectedAnimes, setSelectedAnimes] = useState({});
@@ -97,6 +101,8 @@ function StartScreen({ setGameState }) {
           sudden_death_mode: isSuddenDeathMode,
           time_limit: timeLimit,
           question_time_limit: questionTimeLimit,
+          speed_mode: isSpeedMode,  
+          playback_speed: playbackSpeed,
           currentDeadModeQuestion: 0,
           maxReplays,
           maxLives: parseInt(totalLife, 10),
@@ -127,10 +133,12 @@ function StartScreen({ setGameState }) {
     setTempMaxReplays(maxReplays); // Reset input to current value
     setIsTempMultiTrackMode(isMultiTrackMode)
     setIsTempReverseMode(isReverseMode)
+    setIsTempSpeedMode(isSpeedMode)
     setIsTempTimeAttackMode(isTimeAttackMode); 
     setIsTempSuddenDeathMode(isSuddenDeathMode)
     setTempTimeLimit(timeLimit);
     setTempQuestionTimeLimit(questionTimeLimit);
+    setTempPlaybackSpeed(playbackSpeed);
     setTempTotalLife(totalLife)
     setIsSettingsOpen(true);
   };
@@ -244,19 +252,42 @@ function StartScreen({ setGameState }) {
                 </select>
               </div>}
               <div> </div>
-              {!isTempReverseMode && <div className="toggle-container" onClick={() => setIsTempMultiTrackMode(!isTempMultiTrackMode)}>
+              {!(isTempSpeedMode || isTempReverseMode) && <div className="toggle-container" onClick={() => setIsTempMultiTrackMode(!isTempMultiTrackMode)}>
                 <div className={`toggle-slider-multi ${isTempMultiTrackMode ? 'on' : 'off'}`}>
                   <div className="toggle-circle"></div>
                 </div>
                 <span>{isTempMultiTrackMode ? 'Multi-Track Mode ON' : 'Multi-Track Mode OFF'}</span>
               </div>}
               <div> </div>
-              {!isTempMultiTrackMode && <div className="toggle-container" onClick={() => setIsTempReverseMode(!isTempReverseMode)}>
+              {!(isTempMultiTrackMode || isTempSpeedMode) && <div className="toggle-container" onClick={() => setIsTempReverseMode(!isTempReverseMode)}>
                 <div className={`toggle-slider-multi ${isTempReverseMode ? 'on' : 'off'}`}>
                   <div className="toggle-circle"></div>
                 </div>
                 <span>{isTempReverseMode ? 'Reverse Mode ON' : 'Reverse Mode OFF'}</span>
               </div>}
+              <div> </div>
+              {!(isTempMultiTrackMode || isTempReverseMode) && <div className="toggle-container" onClick={() => setIsTempSpeedMode(!isTempSpeedMode)}>
+                <div className={`toggle-slider-multi ${isTempSpeedMode ? 'on' : 'off'}`}>
+                  <div className="toggle-circle"></div>
+                </div>
+                <span>{isTempSpeedMode ? 'Speed Mode ON' : 'Speed Mode OFF'}</span>
+              </div>}
+              {isTempSpeedMode && (
+                <div>
+                  <label htmlFor="timeLimit">Playback speed: </label>
+                  <select
+                    id="timeLimit"
+                    value={tempPlaybackSpeed}
+                    onChange={(e) => setTempPlaybackSpeed(parseFloat(e.target.value, 10))}
+                    className="small-select"
+                  >
+                    <option value="0.5">0.5</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option> 
+                  </select>
+                  <br />
+                </div>
+              )}
               <div> </div>
               {!(isDeathMode || isTempSuddenDeathMode) && (
                 <div
@@ -298,9 +329,9 @@ function StartScreen({ setGameState }) {
                     <option value="90">90 Seconds</option>
                     <option value="180">180 Seconds</option>
                   </select>
+                  <br />
                 </div>
-              )}
-              <br />
+              )} 
               {isTempSuddenDeathMode && (
                 <div>
                   <label htmlFor="timeLimit">Time Limit: </label>
@@ -315,9 +346,12 @@ function StartScreen({ setGameState }) {
                     <option value="15">15 Seconds</option>
                     <option value="20">20 Seconds</option> 
                   </select>
+                  <br />
                 </div>
               )}
-              <br />
+              
+              
+              
               <div className="modal-buttons">
                 <button onClick={() => setIsSettingsOpen(false)}>Close</button>
                 <button onClick={() => {
@@ -325,10 +359,12 @@ function StartScreen({ setGameState }) {
                   setTotalLife(tempTotalLife);
                   setIsMultiTrackMode(isTempMultiTrackMode);
                   setIsReverseMode(isTempReverseMode);
+                  setIsSpeedMode(isTempSpeedMode);
                   setIsTimeAttackMode(isTempTimeAttackMode);  
                   setTimeLimit(tempTimeLimit);
                   setQuestionTimeLimit(tempQuestionTimeLimit)
                   setIsSuddenDeathMode(isTempSuddenDeathMode)
+                  setPlaybackSpeed(tempPlaybackSpeed)
                   setIsSettingsOpen(false);
                 }}>
                   Save

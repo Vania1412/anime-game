@@ -41,6 +41,8 @@ function QuestionScreen({ gameState, setGameState }) {
     sudden_death_mode,
     time_limit,
     question_time_limit,
+    speed_mode,  
+    playback_speed,
   } = gameState;
 
   const question = questions[currentQuestion] || {};
@@ -49,8 +51,10 @@ function QuestionScreen({ gameState, setGameState }) {
   const isReverseMode = JSON.parse(reverse_mode || 'false');
   const isTimeAttackMode = JSON.parse(time_attack_mode || 'false');
   const isSuddenDeathMode = JSON.parse(sudden_death_mode || 'false');
+  const isSpeedMode = JSON.parse(speed_mode || 'false');
   const timeLimit = parseInt(time_limit, 10);
   const questionTimeLimit = parseInt(question_time_limit, 10) || 30;
+  const playbackSpeed = parseFloat(playback_speed) || 1;
   const [maxReplaysNum, setMaxReplaysNum] = useState(maxReplays);
 
   // Function to play audio (shared between initial and replay)
@@ -63,6 +67,7 @@ function QuestionScreen({ gameState, setGameState }) {
     if (!isMultiTrackMode && !isReverseMode) {
       audioPlayer.src = question.url;
       audioPlayer.currentTime = question.start_time || 0;
+      audioPlayer.playbackRate = isSpeedMode ? playbackSpeed : 1;
       audioPlayer.onloadedmetadata = () => {
         audioPlayer.play().catch((error) => console.error("Playback failed:", error));
         if (!forceReplay) localStorage.setItem(`audioPlayed_${currentQuestion}`, "true");
@@ -229,7 +234,7 @@ function QuestionScreen({ gameState, setGameState }) {
     playAudio();
 
 
-  }, [currentQuestion, question.url, question.start_time, difficulty, isMultiTrackMode, isReverseMode, isTimeAttackMode, isSuddenDeathMode, timeLimit, questionTimeLimit, maxLives]);
+  }, [currentQuestion, question.url, question.start_time, difficulty, isMultiTrackMode, isReverseMode, isTimeAttackMode, isSuddenDeathMode, timeLimit, questionTimeLimit, isSpeedMode, playbackSpeed, maxLives]);
 
   // Time Attack countdown
   useEffect(() => {
@@ -504,6 +509,8 @@ function QuestionScreen({ gameState, setGameState }) {
       sudden_death_mode: false,
       time_limit: 60, // Default value
       question_time_limit: 30,
+      speed_mode: false,
+      playback_speed: 1,
       score: 0,
     });
 

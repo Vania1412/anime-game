@@ -306,3 +306,33 @@ span {
     bottom: 50px;
   }
 }
+
+.modal {
+  padding: 20px;
+  max-width: 500px;
+}
+
+h3 {
+  margin-top: 20px;
+  color: #fff;
+  font-size: 1.2em;
+}
+
+label {
+  display: block;
+  margin: 10px 0;
+  color: #fff;
+}
+
+input[type="radio"] {
+  margin-right: 10px;
+}
+
+.small-select {
+  width: 100px;
+  margin-left: 10px;
+}
+
+.modal-buttons {
+  margin-top: 20px;
+}
