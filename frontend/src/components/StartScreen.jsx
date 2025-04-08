@@ -16,9 +16,13 @@ function StartScreen({ setGameState }) {
   const [isReverseMode, setIsReverseMode] = useState(false);
   const [isTempReverseMode, setIsTempReverseMode] = useState(false);
   const [isTimeAttackMode, setIsTimeAttackMode] = useState(false); // New state for Time Attack
-  const [isTempTimeAttackMode, setIsTempTimeAttackMode] = useState(false); // Temp state for settings
+  const [isTempTimeAttackMode, setIsTempTimeAttackMode] = useState(false); 
+  const [isSuddenDeathMode, setIsSuddenDeathMode] = useState(false);  
+  const [isTempSuddenDeathMode, setIsTempSuddenDeathMode] = useState(false);  
   const [timeLimit, setTimeLimit] = useState(60); // Default 60s
+  const [questionTimeLimit, setQuestionTimeLimit] = useState(10);
   const [tempTimeLimit, setTempTimeLimit] = useState(60);
+  const [tempQuestionTimeLimit, setTempQuestionTimeLimit] = useState(10);
   const [isAnimeListOpen, setIsAnimeListOpen] = useState(false);
   const [animeList, setAnimeList] = useState([]);
   const [selectedAnimes, setSelectedAnimes] = useState({});
@@ -62,7 +66,7 @@ function StartScreen({ setGameState }) {
   const handleSubmit = async (event) => {
     event.preventDefault();
     const difficulty = event.target.difficulty.value;
-    const questionCount = (isDeathMode || isTimeAttackMode) ? 5 : parseInt(event.target.question_count.value, 10);
+    const questionCount = (isDeathMode || isTimeAttackMode || isSuddenDeathMode) ? 5 : parseInt(event.target.question_count.value, 10);
     const selectedAnimeList = Object.keys(selectedAnimes).filter((anime) => selectedAnimes[anime]);
 
     try {
@@ -71,10 +75,8 @@ function StartScreen({ setGameState }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           difficulty,
-          question_count: questionCount,
-          death_mode: isDeathMode,
-          multi_track_mode: isMultiTrackMode,
-          time_attack_mode: isTimeAttackMode,
+          question_count: questionCount, 
+          multi_track_mode: isMultiTrackMode, 
           selected_animes: selectedAnimeList,
         }),
       });
@@ -91,8 +93,10 @@ function StartScreen({ setGameState }) {
           death_mode: isDeathMode,
           multi_track_mode: isMultiTrackMode,
           reverse_mode: isReverseMode,
-          time_attack_mode: isTimeAttackMode, // New field
+          time_attack_mode: isTimeAttackMode, 
+          sudden_death_mode: isSuddenDeathMode,
           time_limit: timeLimit,
+          question_time_limit: questionTimeLimit,
           currentDeadModeQuestion: 0,
           maxReplays,
           maxLives: parseInt(totalLife, 10),
@@ -124,7 +128,9 @@ function StartScreen({ setGameState }) {
     setIsTempMultiTrackMode(isMultiTrackMode)
     setIsTempReverseMode(isReverseMode)
     setIsTempTimeAttackMode(isTimeAttackMode); 
+    setIsTempSuddenDeathMode(isSuddenDeathMode)
     setTempTimeLimit(timeLimit);
+    setTempQuestionTimeLimit(questionTimeLimit);
     setTempTotalLife(totalLife)
     setIsSettingsOpen(true);
   };
@@ -145,7 +151,7 @@ function StartScreen({ setGameState }) {
 
           <div className="row"></div>
 
-          {!isDeathMode && !isTimeAttackMode && (
+          {!(isDeathMode || isTimeAttackMode || isSuddenDeathMode) && (
             <>
               <label htmlFor="question_count">Select Number of Questions:</label>
               <div className="row"></div>
@@ -162,7 +168,7 @@ function StartScreen({ setGameState }) {
 
           )}
 
-          {!isTimeAttackMode && <div className="toggle-container" onClick={handleToggle}>
+          {!(isTimeAttackMode || isSuddenDeathMode) && <div className="toggle-container" onClick={handleToggle}>
             <div className={`toggle-slider ${isDeathMode ? 'on' : 'off'}`}>
               <div className="toggle-circle"></div>
             </div>
@@ -252,7 +258,7 @@ function StartScreen({ setGameState }) {
                 <span>{isTempReverseMode ? 'Reverse Mode ON' : 'Reverse Mode OFF'}</span>
               </div>}
               <div> </div>
-              {!isDeathMode && (
+              {!(isDeathMode || isTempSuddenDeathMode) && (
                 <div
                   className="toggle-container"
                   onClick={() => setIsTempTimeAttackMode(!isTempTimeAttackMode)}
@@ -263,8 +269,20 @@ function StartScreen({ setGameState }) {
                   <span>{isTempTimeAttackMode ? 'Time Attack Mode ON' : 'Time Attack Mode OFF'}</span>
                 </div>
               )}
+              <div> </div>
+              {!(isDeathMode || isTempTimeAttackMode) && (
+                <div
+                  className="toggle-container"
+                  onClick={() => setIsTempSuddenDeathMode(!isTempSuddenDeathMode)}
+                >
+                  <div className={`toggle-slider-multi ${isTempSuddenDeathMode ? 'on' : 'off'}`}>
+                    <div className="toggle-circle"></div>
+                  </div>
+                  <span>{isTempSuddenDeathMode ? 'Sudden Death Mode ON' : 'Sudden Death Mode OFF'}</span>
+                </div>
+              )}
 
-              {isTempTimeAttackMode && !isDeathMode && (
+              {isTempTimeAttackMode && (
                 <div>
                   <label htmlFor="timeLimit">Time Limit: </label>
                   <select
@@ -283,6 +301,23 @@ function StartScreen({ setGameState }) {
                 </div>
               )}
               <br />
+              {isTempSuddenDeathMode && (
+                <div>
+                  <label htmlFor="timeLimit">Time Limit: </label>
+                  <select
+                    id="timeLimit"
+                    value={tempQuestionTimeLimit}
+                    onChange={(e) => setTempQuestionTimeLimit(parseInt(e.target.value, 10))}
+                    className="small-select"
+                  >
+                    <option value="5">5 Seconds</option>
+                    <option value="10">10 Seconds</option>
+                    <option value="15">15 Seconds</option>
+                    <option value="20">20 Seconds</option> 
+                  </select>
+                </div>
+              )}
+              <br />
               <div className="modal-buttons">
                 <button onClick={() => setIsSettingsOpen(false)}>Close</button>
                 <button onClick={() => {
@@ -291,7 +326,9 @@ function StartScreen({ setGameState }) {
                   setIsMultiTrackMode(isTempMultiTrackMode);
                   setIsReverseMode(isTempReverseMode);
                   setIsTimeAttackMode(isTempTimeAttackMode);  
-                    setTimeLimit(tempTimeLimit);
+                  setTimeLimit(tempTimeLimit);
+                  setQuestionTimeLimit(tempQuestionTimeLimit)
+                  setIsSuddenDeathMode(isTempSuddenDeathMode)
                   setIsSettingsOpen(false);
                 }}>
                   Save

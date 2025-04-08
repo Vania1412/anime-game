@@ -14,7 +14,7 @@ function QuestionScreen({ gameState, setGameState }) {
   const [randomStart, setRandomStart] = useState(0);
   const [progress, setProgress] = useState(0);
   const [isAnswered, setIsAnswered] = useState(false);
-  const [remainingLife, setRemainingLife] = useState(0);
+  const [remainingLife, setRemainingLife] = useState(1);
   const [timeLeft, setTimeLeft] = useState(0);
   const [score, setScore] = useState(() => {
     const storedScore = localStorage.getItem('score');
@@ -24,6 +24,7 @@ function QuestionScreen({ gameState, setGameState }) {
   const audioRef2 = useRef(null);
   const timeStartRef = useRef(null);
   const timeEndRef = useRef(null);
+  const timeoutRef = useRef(null);
   const navigate = useNavigate();
 
   const {
@@ -37,7 +38,9 @@ function QuestionScreen({ gameState, setGameState }) {
     multi_track_mode,
     reverse_mode,
     time_attack_mode,
+    sudden_death_mode,
     time_limit,
+    question_time_limit,
   } = gameState;
 
   const question = questions[currentQuestion] || {};
@@ -45,7 +48,9 @@ function QuestionScreen({ gameState, setGameState }) {
   const isMultiTrackMode = JSON.parse(multi_track_mode || 'false');
   const isReverseMode = JSON.parse(reverse_mode || 'false');
   const isTimeAttackMode = JSON.parse(time_attack_mode || 'false');
+  const isSuddenDeathMode = JSON.parse(sudden_death_mode || 'false');
   const timeLimit = parseInt(time_limit, 10);
+  const questionTimeLimit = parseInt(question_time_limit, 10) || 30;
   const [maxReplaysNum, setMaxReplaysNum] = useState(maxReplays);
 
   // Function to play audio (shared between initial and replay)
@@ -196,7 +201,9 @@ function QuestionScreen({ gameState, setGameState }) {
     if (isTimeAttackMode && timeLeft === 0) {
       setTimeLeft(timeLimit);
       setScore(gameState.score || 0);
-    } else if (!isTimeAttackMode) {
+    } else if (isSuddenDeathMode && timeLeft === 0) {
+      setTimeLeft(questionTimeLimit); // Reset timer for each question
+    } else if (!isTimeAttackMode && !isSuddenDeathMode) {
       setRemainingLife(localStorage.getItem('totalLife') !== null ? parseInt(localStorage.getItem('totalLife'), 10) : maxLives);
     }
 
@@ -222,7 +229,7 @@ function QuestionScreen({ gameState, setGameState }) {
     playAudio();
 
 
-  }, [currentQuestion, question.url, question.start_time, difficulty, isMultiTrackMode, isReverseMode, isTimeAttackMode, timeLimit, maxLives]);
+  }, [currentQuestion, question.url, question.start_time, difficulty, isMultiTrackMode, isReverseMode, isTimeAttackMode, isSuddenDeathMode, timeLimit, questionTimeLimit, maxLives]);
 
   // Time Attack countdown
   useEffect(() => {
@@ -248,15 +255,48 @@ function QuestionScreen({ gameState, setGameState }) {
           }
           return prev - 1;
         });
-      }, 1000);
+      }, 1500);
       return () => clearInterval(timer);
     }
   }, [isTimeAttackMode, timeLeft, score, isAnswered, isMultiTrackMode, question]);
+
+  useEffect(() => {
+    if (isSuddenDeathMode && timeLeft > 0 && !isAnswered) {
+      const timer = setInterval(() => {
+        setTimeLeft((prev) => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            setFeedback(`Time's up! Final Score: ${score}. The correct answer${isMultiTrackMode ? 's are' : ' is'}: ${isMultiTrackMode
+              ? `${question[0].correct_answer} and ${question[1].correct_answer}`
+              : question.correct_answer
+              }`);
+            setIsAnswered(true);
+            localStorage.setItem(`isAnswered_${currentQuestion}`, "true");
+            setMaxReplaysNum(-1); // Allow unlimited replays
+            localStorage.setItem('maxReplays', -1);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [isSuddenDeathMode, timeLeft, score, isAnswered, navigate]);
 
   const formatTime = (seconds) => {
     const minutes = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     return `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+  };
+
+  const startNextTimeout = () => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    timeoutRef.current = setTimeout(() => {
+      handleNext();
+      timeoutRef.current = null;
+    }, 1500);
   };
 
   const handleSubmit = (e) => {
@@ -269,9 +309,15 @@ function QuestionScreen({ gameState, setGameState }) {
       if (userAnswer === correctAnswer) {
         setFeedback('Correct!');
         newScore = isTimeAttackMode ? score + 10 + Math.floor(timeLeft / 10) : score + 1;
+        if (isSuddenDeathMode) {
+          if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current);
+          }
+          startNextTimeout();
+        }
       } else {
         setFeedback(`Incorrect! The correct answer is: ${correctAnswer}`);
-        if (isDeathMode) {
+        if (isDeathMode || isSuddenDeathMode) {
           const newLife = remainingLife - 1;
           localStorage.setItem('totalLife', newLife);
           setRemainingLife(newLife);
@@ -289,9 +335,15 @@ function QuestionScreen({ gameState, setGameState }) {
       ) {
         setFeedback('Correct!');
         newScore = isTimeAttackMode ? score + 10 + Math.floor(timeLeft / 10) : score + 1;
+        if (isSuddenDeathMode) {
+          if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current);
+          }
+          startNextTimeout();
+        }
       } else {
         setFeedback(`Incorrect! The correct answers are: ${correctAnswer1} and ${correctAnswer2}`);
-        if (isDeathMode) {
+        if (isDeathMode || isSuddenDeathMode) {
           const newLife = remainingLife - 1;
           localStorage.setItem('totalLife', newLife);
           setRemainingLife(newLife);
@@ -331,12 +383,17 @@ function QuestionScreen({ gameState, setGameState }) {
     if (isLoadingNext) return;
     setIsLoadingNext(true);
 
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+
     localStorage.removeItem(`answeredContent_${currentQuestion}`);
     localStorage.removeItem(`answeredContent2_${currentQuestion}`);
     localStorage.removeItem(`isAnswered_${currentQuestion}`);
     localStorage.removeItem(`audioPlayed_${currentQuestion}`); // Reset for next question
 
-    if (isDeathMode && remainingLife <= 0 || isTimeAttackMode && timeLeft == 0) {
+    if (isDeathMode && remainingLife <= 0 || isSuddenDeathMode && (remainingLife <= 0 || timeLeft == 0) || isTimeAttackMode && timeLeft == 0) {
       setGameState((prev) => ({
         ...prev,
         currentDeadModeQuestion: prev.currentDeadModeQuestion + 1,
@@ -348,7 +405,10 @@ function QuestionScreen({ gameState, setGameState }) {
         currentQuestion: prev.currentQuestion + 1,
         currentDeadModeQuestion: prev.currentDeadModeQuestion + 1,
       }));
-    } else if (isDeathMode || (isTimeAttackMode && timeLeft > 0)) {
+      if (isSuddenDeathMode) {
+        setTimeLeft(questionTimeLimit); // Reset timer for next question
+      }
+    } else if (isDeathMode || isSuddenDeathMode || (isTimeAttackMode && timeLeft > 0)) {
       try {
         const response = await fetch("https://anime-game-tgme.onrender.com/next_question", {
           method: "POST",
@@ -371,6 +431,9 @@ function QuestionScreen({ gameState, setGameState }) {
           }));
           localStorage.setItem(`replayCount_${0}`, 0);
           setReplayCount(0);
+          if (isSuddenDeathMode) {
+            setTimeLeft(questionTimeLimit);
+          }
         } else {
           navigate("/game_over");
         }
@@ -398,8 +461,19 @@ function QuestionScreen({ gameState, setGameState }) {
     localStorage.setItem(`maxReplays`, maxReplays);
   };
 
+  const handleRevealClick = () => {
+    if (isSuddenDeathMode && timeoutRef.current) {
+      clearTimeout(timeoutRef.current); // Pause the timeout
+      timeoutRef.current = null;
+    }
+    setShowYouTube(true);
+  };
+
   const closeYouTubeModal = () => {
     setShowYouTube(false);
+    if (isSuddenDeathMode && isAnswered && feedback === 'Correct!') {
+      startNextTimeout(); // Restart the 1s countdown
+    }
   };
 
   const handleExit = () => {
@@ -427,7 +501,9 @@ function QuestionScreen({ gameState, setGameState }) {
       multi_track_mode: false,
       reverse_mode: false,
       time_attack_mode: false,
+      sudden_death_mode: false,
       time_limit: 60, // Default value
+      question_time_limit: 30,
       score: 0,
     });
 
@@ -455,7 +531,7 @@ function QuestionScreen({ gameState, setGameState }) {
   return (
     <div>
       <h1>Question #{currentDeadModeQuestion + 1}</h1>
-      {isTimeAttackMode && (
+      {(isTimeAttackMode || isSuddenDeathMode) && (
         <div className="time-attack-info">
           <span>Time Left: {formatTime(timeLeft)}</span>
           <span> | Score: {score}</span>
@@ -496,7 +572,7 @@ function QuestionScreen({ gameState, setGameState }) {
           value={answer}
           onChange={(e) => setAnswer(e.target.value)}
           required
-          disabled={isAnswered}
+          disabled={isAnswered || (isTimeAttackMode && timeLeft === 0) || (isSuddenDeathMode && timeLeft === 0)}
         />
         {isMultiTrackMode && (
           <>
@@ -535,7 +611,8 @@ function QuestionScreen({ gameState, setGameState }) {
         <button
           id="reveal-btn"
           className="reveal-button"
-          onClick={() => setShowYouTube(true)}
+          onClick={handleRevealClick}
+          disabled={isLoadingNext}
         >
           Reveal Clip Source{isMultiTrackMode ? 's' : ''}
         </button>
@@ -588,11 +665,11 @@ function QuestionScreen({ gameState, setGameState }) {
         }}
       >
         <button id="next-question-btn">
-          {isTimeAttackMode && timeLeft === 0
+          {(isTimeAttackMode || isSuddenDeathMode) && timeLeft === 0
             ? 'See Score'
-            : (!isDeathMode && currentQuestion + 1 < totalQuestions) || (isDeathMode && remainingLife > 0) || (isTimeAttackMode && timeLeft > 0)
-            ? 'Next Question'
-            : 'See Score'}
+            : (!isDeathMode && !isSuddenDeathMode && currentQuestion + 1 < totalQuestions) || (isDeathMode && remainingLife > 0) || (isTimeAttackMode && timeLeft > 0) || (isSuddenDeathMode && remainingLife > 0)
+              ? 'Next Question'
+              : 'See Score'}
         </button>
       </a>
       {isDeathMode && (
@@ -608,13 +685,13 @@ function QuestionScreen({ gameState, setGameState }) {
         </div>
       )}
 
-      <button
+      {!(((isTimeAttackMode || isSuddenDeathMode) && timeLeft === 0) || !((!isDeathMode && !isSuddenDeathMode && currentQuestion + 1 < totalQuestions) || (isDeathMode && remainingLife > 0) || (isTimeAttackMode && timeLeft > 0) || (isSuddenDeathMode && remainingLife > 0))) && <button
         id="exit-btn"
         className="exit-button"
         onClick={handleExit}
       >
         Exit Game
-      </button>
+      </button>}
     </div>
   );
 }
