@@ -3,37 +3,34 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 100vh; 
+  min-height: 100vh;
   text-align: center;
   margin: 0;
   padding: 0;
 }
- 
 
 /* Title Styling */
 h1 {
   font-size: 2.5rem;
   color: #2d3436;
-  margin: 0 0 15px 0; /* Consistent margins, no top margin needed */
+  margin: 0 0 15px 0;
   font-weight: 600;
-  text-align: center; /* Ensure text is centered */
+  text-align: center;
 }
- 
- 
 
 /* Center the game container */
 .game-container {
-  width: 450px;            /* Base width */
+  width: 450px;
   max-width: 100%;
-  margin: auto; /* Ensure horizontal centering */
+  margin: auto;
   background: #fff;
   padding: 30px;
   border-radius: 15px;
   box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
   display: flex;
   flex-direction: column;
-  align-items: center; /* Center children horizontally */
-  justify-content: center; /* Center content */
+  align-items: center;
+  justify-content: center;
 }
 
 /* Fix centering issue inside the form */
@@ -44,32 +41,34 @@ h1 {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  margin: 0 auto; /* Ensures it's centered */
+  margin: 0 auto;
 }
 
 /* Label Styling */
 label {
   font-size: 1.2rem;
-  margin-bottom: 5px; /* Space between label and input */
+  margin-bottom: 5px;
   color: #2d3436;
 }
 
 /* Ensure that input[type="number"] and select are the same size */
-input[type="number"], select {
+input[type="number"],
+select {
   padding: 12px;
-  width: 250px; /* Fixed width for consistency */
-  max-width: 100%; /* Prevent overflow on smaller screens */
+  width: 250px;
+  max-width: 100%;
   margin: 10px 0;
   border: 2px solid #74b9ff;
   border-radius: 8px;
   font-size: 1rem;
   transition: all 0.3s ease-in-out;
   outline: none;
-  box-sizing: border-box; /* Include padding/border in width */
+  box-sizing: border-box;
 }
 
 /* Focus Styles for input and select */
-input[type="number"]:focus, select:focus {
+input[type="number"]:focus,
+select:focus {
   border-color: #0984e3;
   box-shadow: 0px 0px 10px rgba(9, 132, 227, 0.4);
 }
@@ -86,8 +85,8 @@ button {
   transition: all 0.3s ease-in-out;
   margin: 10px;
   font-weight: 600;
-  width: 250px; /* Match input/select width */
-  max-width: 100%; /* Responsive adjustment */
+  width: 250px;
+  max-width: 100%;
   box-sizing: border-box;
 }
 
@@ -96,24 +95,16 @@ button:hover {
   transform: scale(1.05);
 }
 
-/* Fade In Animation */
-@keyframes fadeIn {
-  from {
-      opacity: 0;
-      transform: translateY(-10px);
-  }
-  to {
-      opacity: 1;
-      transform: translateY(0);
-  }
-}
+/* Toggle Styling */
 .toggle-container {
   display: flex;
   align-items: center;
-  justify-content: left;  
+  justify-content: left;
   margin-bottom: 10px;
 }
-.toggle-slider, .toggle-slider-multi {
+
+.toggle-slider,
+.toggle-slider-multi {
   width: 50px;
   height: 24px;
   background-color: #ccc;
@@ -122,12 +113,19 @@ button:hover {
   cursor: pointer;
 }
 
-
 .toggle-slider.on {
   background-color: #ff5555;
 }
 
 .toggle-slider.off {
+  background-color: #888;
+}
+
+.toggle-slider-multi.on {
+  background-color: #0ba22c;
+}
+
+.toggle-slider-multi.off {
   background-color: #888;
 }
 
@@ -143,42 +141,32 @@ button:hover {
   transition: left 0.3s ease;
 }
 
-.toggle-slider.on .toggle-circle {
-  left: 25px;
-}
- 
-
-.toggle-slider-multi.on {
-  background-color: #0ba22c;
-}
-
-.toggle-slider-multi.off {
-  background-color: #888;
-}
-
+.toggle-slider.on .toggle-circle,
 .toggle-slider-multi.on .toggle-circle {
   left: 25px;
 }
+
 span {
   margin-left: 10px;
   cursor: pointer;
 }
+
 /* Modal Background */
 .modal-overlay {
-  position: fixed; /* Full-screen overlay */
+  position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.5); /* Dim background */
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
-  pointer-events: auto; 
+  pointer-events: auto;
 }
 
-/* Modal Box */
+/* Base Modal Styling */
 .modal {
   background: white;
   padding: 20px;
@@ -187,70 +175,106 @@ span {
   width: 400px;
 }
 
-.modal h2 {
-  margin-bottom: 10px;
+/* Settings Modal Specific Styling */
+.settings-modal {
+  background: #fff;
+  color: #2d3436;
+  padding: 20px;
+  border-radius: 10px;
+  width: 400px;
+  max-height: 70vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
-.modal input {
+.settings-modal h2 {
+  margin-top: 0;
+  font-size: 1.5em;
+  color: #2d3436;
+}
+
+/* Settings Section Styling */
+.settings-section {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.settings-label {
+  width: 150px;
+  font-size: 1.2em;
+  color: #2d3436;
+  margin: 0;
+}
+
+.settings-options {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.settings-options label {
+  margin: 5px 0;
+  font-size: 1em;
+}
+
+.settings-options select {
   width: 100px;
-  margin-bottom: 10px;
+  padding: 5px;
+  margin: 5px 0;
+  background: #fff;
+  color: #2d3436;
+  border: 1px solid #74b9ff;
+  border-radius: 5px;
+}
+
+.settings-modal input[type="radio"] {
+  margin-right: 10px;
 }
 
 .small-select {
-  width: 135px; /* Adjust the width as needed */
+  width: 100px;
+  padding: 5px;
+  background: #fff;
+  color: #2d3436;
+  border: 1px solid #74b9ff;
+  border-radius: 5px;
 }
 
+.modal-header {
+  text-align: center;
+  margin-bottom: 15px;
+  font-size: 1.5em;
+  color: #2d3436;
+}
 
 .modal-buttons {
+  margin-top: 20px;
   display: flex;
-  gap: 10px; /* Adds space between buttons */
-  margin-top: 10px;
+  justify-content: center;
 }
 
 .modal-buttons button {
-  flex: 1; /* Makes buttons equal width */
-  padding: 8px 12px;
-  font-size: 16px;
-  cursor: pointer;
-}
-
-
-#settingsBtn {
-  position: absolute; /* Position relative to the nearest positioned ancestor */
-  bottom: 10px; /* Distance from the bottom */
-  right: 10px; /* Distance from the right */
-  padding: 8px 12px;
-  font-size: 16px;
-  width: 150px;
-  cursor: pointer;
-  background: linear-gradient(135deg, #888, #666);
-  color: white;
+  padding: 10px 20px;
+  background: #555;
+  color: #fff;
   border: none;
   border-radius: 5px;
-}
-
-#customizeListBtn {
-  position: absolute; /* Position relative to the nearest positioned ancestor */
-  bottom: 60px; /* Distance from the bottom */
-  right: 10px; /* Distance from the right */
-  padding: 8px 12px;
-  font-size: 16px;
-  width: 150px;
   cursor: pointer;
-  background: linear-gradient(135deg, #888, #666);
-  color: white;
-  border: none;
-  border-radius: 5px;
 }
 
+.modal-buttons button:hover {
+  background: #777;
+}
+
+/* Anime Modal Styling */
 .modal-anime {
   background: white;
   padding: 20px;
   border-radius: 10px;
   width: 440px;
   text-align: left;
-  max-height: 80vh;
-  overflow-y: auto;
+  max-height: 80vh; 
   z-index: 1001;
 }
 
@@ -269,6 +293,28 @@ span {
   margin: 5px 0;
 }
 
+/* Settings and Customize Buttons */
+#settingsBtn {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  padding: 8px 12px;
+  font-size: 16px;
+  width: 150px;
+  background: linear-gradient(135deg, #888, #666);
+}
+
+#customizeListBtn {
+  position: absolute;
+  bottom: 60px;
+  right: 10px;
+  padding: 8px 12px;
+  font-size: 16px;
+  width: 150px;
+  background: linear-gradient(135deg, #888, #666);
+}
+
+/* Media Queries */
 @media (max-width: 600px) {
   h1 {
     font-size: 2rem;
@@ -277,15 +323,17 @@ span {
   .game-container {
     width: 95%;
     padding: 20px;
-
   }
 
-  input[type="number"], select, button {
+  input[type="number"],
+  select,
+  button {
     width: 100%;
     font-size: 1rem;
   }
 
-  .modal {
+  .modal,
+  .settings-modal {
     width: 90%;
     max-width: 350px;
   }
@@ -295,7 +343,8 @@ span {
     max-width: 350px;
   }
 
-  #settingsBtn, #customizeListBtn {
+  #settingsBtn,
+  #customizeListBtn {
     right: 10px;
     bottom: 10px;
     font-size: 12px;
@@ -305,34 +354,14 @@ span {
   #customizeListBtn {
     bottom: 50px;
   }
-}
 
-.modal {
-  padding: 20px;
-  max-width: 500px;
-}
+  .settings-section {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 
-h3 {
-  margin-top: 20px;
-  color: #fff;
-  font-size: 1.2em;
-}
-
-label {
-  display: block;
-  margin: 10px 0;
-  color: #fff;
-}
-
-input[type="radio"] {
-  margin-right: 10px;
-}
-
-.small-select {
-  width: 100px;
-  margin-left: 10px;
-}
-
-.modal-buttons {
-  margin-top: 20px;
+  .settings-label {
+    width: auto;
+    margin-bottom: 10px;
+  }
 }
