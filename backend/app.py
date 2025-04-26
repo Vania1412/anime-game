@@ -63,7 +63,7 @@ def start_game():
         if not data:
             return jsonify({"error": "Invalid JSON format"}), 400
 
-        difficulty = int(data.get("difficulty", 3)) 
+        difficulty = int(data.get("difficulty", 3)) * float(data.get("speed", 1))
         
         is_multi_track_mode = data.get("multi_track_mode", False)  # New flag for Multi-Track Mode
 
@@ -101,7 +101,7 @@ def next_question():
         if not data or "difficulty" not in data:
             return jsonify({"error": "Invalid request format"}), 400
 
-        difficulty = int(data["difficulty"])  
+        difficulty = int(data["difficulty"]) * float(data.get("speed", 1))
         is_multi_track_mode = data.get("multi_track_mode", False)  # New flag for Multi-Track Mode
 
         if is_multi_track_mode:

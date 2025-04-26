@@ -421,6 +421,7 @@ function QuestionScreen({ gameState, setGameState }) {
           body: JSON.stringify({
             difficulty,
             multi_track_mode: isMultiTrackMode,
+            speed: playbackSpeed,
           }),
         });
 

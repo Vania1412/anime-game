@@ -33,7 +33,7 @@ function StartScreen({ setGameState }) {
       })
       .catch((error) => console.error('Error fetching anime list:', error));
 
-    const storedGameMode = localStorage.getItem('gameMode') || 'normal';
+    const storedGameMode = 'normal';
     setGameMode(storedGameMode);
   }, []);
 
@@ -64,6 +64,7 @@ function StartScreen({ setGameState }) {
           question_count: finalQuestionCount,
           multi_track_mode: isMultiTrackMode,
           selected_animes: selectedAnimeList,
+          speed: playbackSpeed,
         }),
       });
 
@@ -375,6 +376,8 @@ function StartScreen({ setGameState }) {
                       <option value="0.5">0.5x</option>
                       <option value="2">2x</option>
                       <option value="3">3x</option>
+                      <option value="3">4x</option>
+                      <option value="3">5x</option>
                     </select>
                   </div>
                 </div>
