@@ -376,8 +376,8 @@ function StartScreen({ setGameState }) {
                       <option value="0.5">0.5x</option>
                       <option value="2">2x</option>
                       <option value="3">3x</option>
-                      <option value="3">4x</option>
-                      <option value="3">5x</option>
+                      <option value="4">4x</option>
+                      <option value="5">5x</option>
                     </select>
                   </div>
                 </div>

@@ -5,10 +5,9 @@ import './GameOverScreen.css';
 const GameOverScreen = ({ gameState, setGameState }) => {
   const [percentage, setPercentage] = useState('0.00');
   const navigate = useNavigate();
-  const { score, totalQuestions, time_attack_mode, sudden_death_mode} = gameState;
+  const { score, totalQuestions, death_mode, time_attack_mode, sudden_death_mode} = gameState;
 
-  const isDeathMode = JSON.parse(localStorage.getItem('isDeathMode') || 'false');
-  console.log(isDeathMode)
+   
 
 
   useEffect(() => {
@@ -34,7 +33,7 @@ const GameOverScreen = ({ gameState, setGameState }) => {
   return (
     <div className="restart-container">
       <h1>Game Over!</h1>
-      {(isDeathMode || sudden_death_mode) ? (
+      {(death_mode || sudden_death_mode) ? (
         <div>
           <p>You were defeated.</p>
           <p className="final-score">After answering {score} question{score <= 1 ? '' : 's'} correctly</p>

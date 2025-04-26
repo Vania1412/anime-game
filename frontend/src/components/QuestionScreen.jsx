@@ -37,6 +37,7 @@ function QuestionScreen({ gameState, setGameState }) {
     maxLives,
     multi_track_mode,
     reverse_mode,
+    death_mode,
     time_attack_mode,
     sudden_death_mode,
     time_limit,
@@ -46,7 +47,7 @@ function QuestionScreen({ gameState, setGameState }) {
   } = gameState;
 
   const question = questions[currentQuestion] || {};
-  const isDeathMode = JSON.parse(localStorage.getItem('isDeathMode') || 'false');
+  const isDeathMode = JSON.parse(death_mode || 'false');
   const isMultiTrackMode = JSON.parse(multi_track_mode || 'false');
   const isReverseMode = JSON.parse(reverse_mode || 'false');
   const isTimeAttackMode = JSON.parse(time_attack_mode || 'false');
